@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class Config():
     """Representation of the configuration.
 
-    Configuration can be set in three different ways:
+    Configuration can be set in two different ways:
     * APPLICATION_PATH/settings/config.ini (application's defaults)
     * ~/.config/boxcontroller/config.ini
     * script params
@@ -23,24 +23,24 @@ class Config():
         """
         self._reset()
 
-    def load_config(self):
+    def load(self):
         config = configparser.ConfigParser(interpolation=None)
         # load from APPLICATION_PATH/settings/config.ini
         path = Path(pkg_resources.resource_filename(__name__,
             'settings/config.ini'))
-        self._load_config(config, path)
+        config = self._load(config, path)
         # load from ~/.config/boxcontroller
-        config_home = Path.home() / '.config'
-        path = config_home.expanduser().resolve()
+        home = Path.home() / '.config'
+        path = home.expanduser().resolve()
         path = path / 'boxcontroller' / 'config.ini'
-        self.__config = self._load_config(config, path)
+        self.__config = self._load(config, path)
 
     def _reset(self):
         """Reset variables."""
         self.__config = {}
-        self.load_config()
+        self.load()
 
-    def _load_config(self, config, path):
+    def _load(self, config, path):
         """Load config from file.
 
         Positional arguments:
