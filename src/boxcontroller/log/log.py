@@ -33,7 +33,7 @@ config = {
             'propagate': False,
             'level': 'DEBUG',
         },
-        'icstool': {
+        'boxcontroller': {
             'handlers': ['console'],
             'propagate': False,
             'level': 'DEBUG',
