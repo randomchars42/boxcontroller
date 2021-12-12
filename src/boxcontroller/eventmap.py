@@ -5,9 +5,11 @@ import os
 from pathlib import Path
 import pkg_resources
 
+from . import keymap
+
 logger = logging.getLogger(__name__)
 
-class EventMap():
+class EventMap(keymap.KeyMap):
     """Representation of the two event map files.
 
     Events are mapped in two different files:
@@ -21,24 +23,18 @@ class EventMap():
 
     def __init__(self, config):
         """Initialise variables and load map from file(s)."""
-        self.__config = config
-        self.__path_user_map = Path(self._get_config().get('Paths', 'eventmap'))
+        super().__init__(config)
+        self.__path_user_map = Path(self.get_config().get('Paths', 'eventmap'))
         self.__path_user_map = self.__path_user_map.expanduser().resolve()
-        self._reset()
+        self.reset()
 
-    def _reset(self):
+    def reset(self):
         """Reset variables."""
-        self.__map = {}
+        super().reset()
         self.load()
 
-    def _get_map(self):
-        return self.__map
-
-    def _get_path_user_map(self):
+    def get_path_user_map(self):
         return self.__path_user_map
-
-    def _get_config(self):
-        return self.__config
 
     def load(self):
         """(Re-)read the mapping files.
@@ -48,142 +44,52 @@ class EventMap():
         # load from APPLICATION_PATH/settings/events
         path = Path(pkg_resources.resource_filename(__name__,
             'settings/eventmap'))
-        self.__map = self._load(path)
+        super().load(path)
         # load from ~/.config/boxcontroller
-        self.__map.update(self._load(self._get_path_user_map()))
-
-    def _load(self, path):
-        """Load event map from file.
-
-        Each line should look like:
-        KEY EVENTNAME PARAM1=VALUE1 PARAM2=VALUE2 ...
-
-        Positional arguments:
-        path -- Path to load event map from
-        """
-        mapping = {}
-        try:
-            with open(path, 'r') as event_map:
-                lines = event_map.readlines()
-            for line in lines:
-                try:
-                    key, event, params = self._process_map(line)
-                    mapping[key] = {
-                            'name': event,
-                            'params': params
-                            }
-                except ValueError:
-                    logger.error('malformed: "{}"'.format(line))
-                    continue
-        except FileNotFoundError:
-            logger.debug('could not open file at ' + str(path))
-        else:
-            logger.debug('loaded eventmap from: ' + str(path))
-        return mapping
-
-    def _process_map(self, raw_map):
-        """Process a mapping line.
-
-        Mapping lines are formatted like this:
-        KEY EVENT
-
-        Positional arguments:
-        raw_map -- the raw map to parse [string]
-        """
-        if raw_map == '':
-            raise ValueError('empty mapping given')
-
-        (key, rest) = raw_map.strip().split(' ', 1)
-        return (key, *self._process_event(rest))
-
-    def _process_event(self, raw_event):
-        """Process the string representation of an event.
-
-        EVENTs are represented like this:
-        EVENTNAME PARAM1=VALUE1 PARAM2=VALUE2 ...
-
-        Positional arguments:
-        raw_event -- the raw event to parse [string]
-        """
-        raw_event = raw_event.strip().split(' ')
-        parameters = {}
-        event, *params = [item for item in raw_event if item != '']
-        for param in params:
-            name, value = param.split("=", 1)
-            parameters[name] = value
-        return (event, parameters)
+        super().load(self.get_path_user_map())
 
     def get(self, key):
         """Return the event mapped to the key or None.
 
         Positional arguments:
         key -- the key [string]
+
+        Returns:
+        (event [string], ['positional': [string], 'keyword': {string: string}]
         """
         try:
-            return self._get_map()[key]
+            data = self.get_map()[key]
+            return (
+                    data['positional'][0],
+                    {
+                        'positional': data['positional'][1:],
+                        'keyword': data['keyword'].copy()
+                    }
+                    )
         except KeyError:
             logger.error('no event for key: "{}"'.format(key))
-            return None
+            raise KeyError
 
-    def _to_map_line(self, key, event, **params):
-        """Convert params to an event map line.
-
-        Positional arguements:
-        key -- the key that gets input [string]
-        event -- name of the event [string] or remove with [None]
-        **params -- additional parameters
-        """
-        # TODO add some checking
-        param_string = ' '.join(
-                ['{}={}'.format(key, value) for (key, value) in params.items()])
-        return '{} {} {}'.format(key, event, param_string)
-
-    def update(self, key, event, **params):
+    def update(self, key, event, *args, **kwargs):
         """Update, add or delete the mapping of an event.
 
-        Positional arguements:
-        key -- the key that gets input [string]
-        event -- name of the event [string] or remove with [None]
-        **params -- additional parameters
+        Positional arguments:
+        key -- the key [string]
+        event -- name of the event [string], pass [None] to remove entry
+        *args -- positional data [string], leave empty to remove entry
+        **params -- keyworded data [string: string], leave empty to remove entry
         """
-        try:
-            with open(self._get_path_user_map(), 'r') as event_map:
-                lines = event_map.readlines()
-        except FileNotFoundError:
-            logger.debug('could not open file at ' + str(self._get_path_user_map()))
-            lines = []
+        if event is None:
+            self.remove(key)
+        args = [event, *args]
+        super().update(self.get_path_user_map(), key, *args,
+                **kwargs)
 
-        key_length = len(key)
-        done = False
+    def remove(self, key):
+        """Remove entry with key.
 
-        for i, line in enumerate(lines):
-            if line[:key_length + 1] == key + ' ':
-                # the key is already mapped
-                # make sure we don't accidentally catch a longer key by adding
-                # the required blank to the end of the key
-                if event is not None:
-                    # update the mapping
-                    lines[i] = self._to_map_line(key, event, **params)
-                    done = True
-                    logger.info('update event for key "{}"'.format(key))
-                else:
-                    # remove the mapping
-                    lines[i].pop(i)
-                    done = True
-                    logger.info('update event for key "{}"'.format(key))
-                break
-
-        if not done and not event is None:
-            # there was no mapping so append it
-            lines.append(self._to_map_line(key, event, **params))
-            logger.info('added event for key "{}"'.format(key))
-
-        path = Path(self._get_path_user_map())
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True,exist_ok=True)
-
-        with open(path, 'w') as event_map:
-            event_map.write('\n'.join(lines))
-            logger.debug('updated event map ("{}")'.format(path))
-
-        self._reset()
+        Positional arguments:
+        path -- the path of the file [string]
+        key -- the key of the data to remove
+        """
+        super().remove(self.get_path_user_map(), key)

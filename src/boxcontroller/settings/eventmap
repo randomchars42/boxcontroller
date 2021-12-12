@@ -1,4 +1,10 @@
-GPIO_23 toggle_stop_resume
-GPIO_24 a
-yourself smile at=yourself
-joke smile at=joke
+yourself|smile|at=yourself
+joke|smile|at=joke
+toggle|toggle
+play|play
+pause|pause
+stop|stop
+next|next
+previous|previous
+volume_inc|volume|direction=+
+volume_dec|volume|direction=-

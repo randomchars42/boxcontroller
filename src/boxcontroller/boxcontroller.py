@@ -99,23 +99,23 @@ class BoxController(publisher.Publisher):
         string - the input to map to an event [string]
         """
         logger.debug('recieved input: "{}"'.format(string))
-        event = self._event_map.get(string)
-
-        if event is None:
-            logger.error('no event for key "{}"'.format(string))
+        try:
+            event, data = self._event_map.get(string)
+        except KeyError:
             return
 
-        self.dispatch(event['name'], **event['params'])
+        self.dispatch(event, *data['positional'], **data['keyword'])
 
-    def define_event(self, key, event, **params):
+    def define_event(self, key, event, *args, **kwargs):
         """Update, add or delete the mapping of an event.
 
-        Positional arguements:
-        key -- the key that gets input [string]
-        event -- name of the event [string] or remove with [None]
-        **params -- additional parameters
+        Positional arguments:
+        key -- the key [string]
+        event -- name of the event [string], pass [None] to remove entry
+        *args -- positional data [string], leave empty to remove entry
+        **params -- keyworded data [string: string], leave empty to remove entry
         """
-        self._event_map.update(key, event, **params)
+        self._event_map.update(key, event, *args, **kwargs)
 
 def main():
     """Run the application.
@@ -144,6 +144,15 @@ def main():
     boxcontroller.process_input('yourself')
     boxcontroller.process_input('joke')
     boxcontroller.define_event('3213', 'play', file='v.mp3', param='value')
+    #boxcontroller.process_input('toggle')
+    #boxcontroller.process_input('volume_inc')
+    #boxcontroller.process_input('volume_inc')
+    #boxcontroller.process_input('volume_inc')
+    #import time
+    #time.sleep(3)
+    #boxcontroller.process_input('volume_dec')
+    #boxcontroller.process_input('volume_dec')
+    #boxcontroller.process_input('volume_dec')
 
 def signal_handler(signal_num, frame):
     """Log signal and call sys.exit(0).

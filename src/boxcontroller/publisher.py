@@ -32,10 +32,10 @@ class Publisher:
         del self.get_subscribers(event)[who]
         logger.debug('"{}" unregistered for event "{}"'.format(who, event))
 
-    def dispatch(self, event, **kwargs):
+    def dispatch(self, event, *args, **kwargs):
         for subscriber, callback in self.get_subscribers(event).items():
             logger.debug('dispatched "{}" for "{}"'.format(event, subscriber))
-            callback(**kwargs)
+            callback(*args, **kwargs)
 
     def _reset(self):
         self._events = {}
