@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class Publisher:
     """Simple publisher base class."""
 
@@ -22,12 +26,15 @@ class Publisher:
                 logger.error('could not get default callback on {}'.format(who))
                 return
         self.get_subscribers(event)[who] = callback
+        logger.debug('"{}" registered for event "{}"'.format(who, event))
 
     def unregister(self, event, who):
         del self.get_subscribers(event)[who]
+        logger.debug('"{}" unregistered for event "{}"'.format(who, event))
 
     def dispatch(self, event, **kwargs):
         for subscriber, callback in self.get_subscribers(event).items():
+            logger.debug('dispatched "{}" for "{}"'.format(event, subscriber))
             callback(**kwargs)
 
     def _reset(self):
