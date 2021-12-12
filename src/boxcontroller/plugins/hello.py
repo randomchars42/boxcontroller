@@ -7,6 +7,13 @@ from boxcontroller.plugin import Plugin
 logger = logging.getLogger(__name__)
 
 class Hello(Plugin):
-    def __init__(self):
-        logger.info('loaded Hello')
-        print("Hello! :)")
+
+    def on_plugins_loaded(self):
+        self._smile = ':)'
+        self._register('smile', self.smile)
+
+    def smile(self, at=''):
+        if at == 'joke':
+            print(':D')
+        else:
+            print(self._smile)

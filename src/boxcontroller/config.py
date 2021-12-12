@@ -30,9 +30,8 @@ class Config():
             'settings/config.ini'))
         config = self._load(config, path)
         # load from ~/.config/boxcontroller
-        home = Path.home() / '.config'
-        path = home.expanduser().resolve()
-        path = path / 'boxcontroller' / 'config.ini'
+        path = Path.home() / '.config/boxcontroller/config.ini'
+        path = path.expanduser().resolve()
         self.__config = self._load(config, path)
 
     def _reset(self):
