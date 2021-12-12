@@ -21,7 +21,7 @@ class BoxController(publisher.Publisher):
     def __init__(self, config):
         self._plugins = {}
         self._config = config
-        self._event_map = evt.EventMap()
+        self._event_map = evt.EventMap(config)
 
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
             'plugins'))

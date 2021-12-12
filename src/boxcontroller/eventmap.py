@@ -19,16 +19,26 @@ class EventMap():
     For the general form see Commands.process_map().
     """
 
-    def __init__(self):
+    def __init__(self, config):
         """Initialise variables and load map from file(s)."""
-        self._path_user_map = Path.home() / '.config/boxcontroller/eventmap'
-        self._path_user_map = self._path_user_map.expanduser().resolve()
+        self.__config = config
+        self.__path_user_map = Path(self._get_config().get('Paths', 'eventmap'))
+        self.__path_user_map = self.__path_user_map.expanduser().resolve()
         self._reset()
 
     def _reset(self):
         """Reset variables."""
         self.__map = {}
         self.load()
+
+    def _get_map(self):
+        return self.__map
+
+    def _get_path_user_map(self):
+        return self.__path_user_map
+
+    def _get_config(self):
+        return self.__config
 
     def load(self):
         """(Re-)read the mapping files.
@@ -40,7 +50,7 @@ class EventMap():
             'settings/eventmap'))
         self.__map = self._load(path)
         # load from ~/.config/boxcontroller
-        self.__map.update(self._load(self._path_user_map))
+        self.__map.update(self._load(self._get_path_user_map()))
 
     def _load(self, path):
         """Load event map from file.
@@ -110,7 +120,7 @@ class EventMap():
         key -- the key [string]
         """
         try:
-            return self.__map[key]
+            return self._get_map()[key]
         except KeyError:
             logger.error('no event for key: "{}"'.format(key))
             return None
@@ -137,10 +147,10 @@ class EventMap():
         **params -- additional parameters
         """
         try:
-            with open(self._path_user_map, 'r') as event_map:
+            with open(self._get_path_user_map(), 'r') as event_map:
                 lines = event_map.readlines()
         except FileNotFoundError:
-            logger.debug('could not open file at ' + str(self._path_user_map))
+            logger.debug('could not open file at ' + str(self._get_path_user_map()))
             lines = []
 
         key_length = len(key)
@@ -168,8 +178,12 @@ class EventMap():
             lines.append(self._to_map_line(key, event, **params))
             logger.info('added event for key "{}"'.format(key))
 
-        with open(self._path_user_map, 'w') as event_map:
+        path = Path(self._get_path_user_map())
+        if not path.parent.exists():
+            path.parent.mkdir(parents=True,exist_ok=True)
+
+        with open(path, 'w') as event_map:
             event_map.write('\n'.join(lines))
-            logger.debug('updated event map ("{}")'.format(self._path_user_map))
+            logger.debug('updated event map ("{}")'.format(path))
 
         self._reset()
