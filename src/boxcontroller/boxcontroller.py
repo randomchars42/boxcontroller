@@ -61,15 +61,16 @@ class BoxController(publisher.Publisher):
         """
         logger.info('loading plugins from {}'.format(path))
 
-        for loader, name, pkg in pkgutil.iter_modules([str(path)]):
-            logger.debug(name)
-            package = loader.find_module(name).load_module(name)
-            loader.find_module(name).exec_module(package)
-            class_name = name[0].upper() + name[1:]
-            if class_name in self._plugins:
-                logger.warning('overwriting plugin {}'.format(class_name))
-            self._plugins[class_name] = getattr(package, class_name)(
-                    name=class_name, publisher=self, config=self.get_config())
+        sys.path.append(str(path))
+        for file in path.glob('*'):
+            if file.name == '__pycache__' or not file.is_dir():
+                continue
+            name = file.name
+            package = import_module('{}.{}'.format(name, name))
+            classname = name[0].upper() + name[1:]
+            self._plugins[classname] = getattr(package, classname)(
+                        name=classname, publisher=self,
+                        config=self.get_config())
 
         logger.info('plugins loaded from {}'.format(path))
 
