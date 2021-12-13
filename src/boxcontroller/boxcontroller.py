@@ -51,7 +51,7 @@ class BoxController(publisher.Publisher):
         self._plugins['main'] = self
         self._load_plugins(self._path_plugins)
         self._load_plugins(self._path_plugins_user.expanduser().resolve())
-        self.dispatch('plugins_loaded')
+        self.dispatch('on_init')
 
     def _load_plugins(self, path):
         """Gather all packages under path as plugins.

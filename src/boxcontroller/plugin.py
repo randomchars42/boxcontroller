@@ -19,7 +19,7 @@ class Plugin:
         self.__publisher = kwargs['publisher']
         self.__config = kwargs['config']
         self.__name = kwargs['name']
-        self.register('plugins_loaded', self.on_plugins_loaded)
+        self.register('on_init', self.on_init)
 
     def get_name(self):
         return self.__name
@@ -47,6 +47,6 @@ class Plugin:
         """
         self.get_publisher().unregister(event, self.get_name())
 
-    def on_plugins_loaded(self):
+    def on_init(self):
         raise NotImplementedError('you missed your chance to initialise ' +
                 'and register events')

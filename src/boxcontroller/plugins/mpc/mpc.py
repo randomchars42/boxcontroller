@@ -10,8 +10,7 @@ logger = logging.getLogger('boxcontroller.plugin.' + __name__)
 
 class MPC(Plugin):
 
-    def on_plugins_loaded(self):
-        logger.debug("MPD FTW!")
+    def on_init(self):
         self.register('toggle', self.toggle)
         self.register('play', self.play)
         self.register('pause', self.play)

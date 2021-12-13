@@ -12,7 +12,7 @@ class Hello(Plugin):
     Initialises on on_plugins_loaded().
     """
 
-    def on_plugins_loaded(self):
+    def on_init(self):
         self._smile = self.get_config().get('Hello', 'smile')
         self.register('smile', self.smile)
 
