@@ -5,6 +5,7 @@ import sys
 import logging
 import logging.config
 import pkgutil
+from importlib import import_module
 import pkg_resources
 import argparse
 

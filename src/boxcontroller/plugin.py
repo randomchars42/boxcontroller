@@ -19,33 +19,33 @@ class Plugin:
         self.__publisher = kwargs['publisher']
         self.__config = kwargs['config']
         self.__name = kwargs['name']
-        self._register('plugins_loaded', self.on_plugins_loaded)
+        self.register('plugins_loaded', self.on_plugins_loaded)
 
     def get_name(self):
         return self.__name
 
-    def _get_config(self):
+    def get_config(self):
         return self.__config
 
-    def _get_publisher(self):
+    def get_publisher(self):
         return self.__publisher
 
-    def _register(self, event, callback):
+    def register(self, event, callback):
         """Register to an event.
 
         Positional arguments:
         event -- the event to register to [string]
         callback -- the function / lambda to call
         """
-        self._get_publisher().register(event, self.get_name(), callback)
+        self.get_publisher().register(event, self.get_name(), callback)
 
-    def _unregister(self, event):
+    def unregister(self, event):
         """Unregister from an event.
 
         Positional arguments:
         event -- the event to register to [string]
         """
-        self._get_publisher().unregister(event, self.get_name())
+        self.get_publisher().unregister(event, self.get_name())
 
     def on_plugins_loaded(self):
         raise NotImplementedError('you missed your chance to initialise ' +
