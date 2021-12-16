@@ -59,13 +59,10 @@ class EventMap(keymap.KeyMap):
         """
         try:
             data = self.get_map()[key]
-            return (
-                    data['positional'][0],
-                    {
+            return (data['positional'][0], {
                         'positional': data['positional'][1:],
                         'keyword': data['keyword'].copy()
-                    }
-                    )
+                    })
         except KeyError:
             logger.error('no event for key: "{}"'.format(key))
             raise KeyError

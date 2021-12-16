@@ -50,3 +50,15 @@ class Plugin:
     def on_init(self):
         raise NotImplementedError('you missed your chance to initialise ' +
                 'and register events')
+
+    def communicate(self, message, type):
+        """Communicate something to the user.
+
+        Boxcontroller will choose appropriate means (playing a sound,
+        displaying a message, ...)
+
+        Positional arguments:
+        message --  the message to relay [string]
+        type -- type of message ("error"|"info") [string]
+        """
+        logger.info('{}: {}'.format(type, message))
