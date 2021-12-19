@@ -140,18 +140,21 @@ class KeyMap():
                 # the required delimiter to the end of the key
                 if len(args) > 0 or len(kwargs) > 0:
                     # update the mapping
-                    lines[i] = self._to_map_line(mapkey, args, kwargs)
+                    print(i)
+                    print(lines[i])
+                    lines[i] = self._to_map_line(mapkey, args, kwargs) + '\n'
+                    print(lines[i])
                     logger.debug('updated entry for key "{}"'.format(mapkey))
                 else:
                     # remove the mapping
-                    lines[i].pop(i)
+                    lines.pop(i)
                     logger.debug('removed entry for key "{}"'.format(mapkey))
                 done = True
                 break
 
         if not done and (len(args) > 0 or len(kwargs) > 0):
             # there was no mapping so append it
-            lines.append(self._to_map_line(mapkey, args, kwargs))
+            lines.append(self._to_map_line(mapkey, args, kwargs) + '\n')
             logger.info('added entry for key "{}"'.format(mapkey))
 
         path = Path(path)
@@ -159,7 +162,7 @@ class KeyMap():
             path.parent.mkdir(parents=True,exist_ok=True)
 
         with open(path, 'w') as map:
-            map.write('\n'.join(lines))
+            map.write(''.join(lines))
             logger.debug('updated map: "{}"'.format(path))
 
         self.reset()
