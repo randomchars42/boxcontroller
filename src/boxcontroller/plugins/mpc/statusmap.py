@@ -19,8 +19,8 @@ class StatusMap(KeyMap):
     gets stored.
     """
 
-    status_keywords = ['status', 'position', 'time', 'file', 'name',
-            'repeat', 'random', 'single', 'consume']
+    status_keywords = ['position', 'time', 'file', 'name', 'repeat', 'random',
+        'single', 'consume']
 
     def __init__(self, config):
         """Initialise variables and load map from file(s)."""
