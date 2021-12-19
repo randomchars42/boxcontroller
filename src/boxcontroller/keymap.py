@@ -140,10 +140,7 @@ class KeyMap():
                 # the required delimiter to the end of the key
                 if len(args) > 0 or len(kwargs) > 0:
                     # update the mapping
-                    print(i)
-                    print(lines[i])
                     lines[i] = self._to_map_line(mapkey, args, kwargs) + '\n'
-                    print(lines[i])
                     logger.debug('updated entry for key "{}"'.format(mapkey))
                 else:
                     # remove the mapping
