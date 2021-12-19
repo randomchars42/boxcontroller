@@ -16,39 +16,22 @@ class Mpc(Plugin):
     def on_init(self):
         self.__statusmap = statusmap.StatusMap(self.get_config())
         self.register('play', self.play)
-        self.register('toggle', lambda: self.simple_command('toggle')))
-        self.register('stop', lambda: self.simple_command('stop')))
-        self.register('next', lambda: self.simple_command('next')))
+        self.register('toggle', lambda: self.simple_command('toggle'))
+        self.register('stop', lambda: self.simple_command('stop'))
+        self.register('next', lambda: self.simple_command('next'))
         self.register('previous', lambda: self.simple_command('previous'))
         self.register('volume', self.volume)
         self.register('toggle', self.test)
 
     def test(self):
-        self.query_mpd_status()
+        #self.play(key="Mark Knopfler Tes")
+        #self.play(key="Mark Knopfler Test.m3u")
+        self.simple_command('next')
+        #self.simple_command('next')
+        #self.simple_command('next')
 
     def get_statusmap(self):
         return self.__statusmap
-
-    def get_empty_status(self):
-        """Return an empty dict with all keys stored in the file.
-
-        All those information can be gathered from mpc except the key and type
-        which are stored in #CURRENT.
-        """
-        return {
-                'key': '',
-                'type': '',
-                'status': '',
-                'volume': '',
-                'position': '',
-                'time': '',
-                'file': '',
-                'name': '',
-                'repeat': '',
-                'random': '',
-                'single': '',
-                'consume': ''
-                }.copy()
 
     def get_status(self, key, parameter = None):
         """Return the status for key.
@@ -57,47 +40,43 @@ class Mpc(Plugin):
         key -- the key [string]
         parameter -- what to return, returns all if parameter == None [string]
         """
-        if key == 'key':
-            return self.get_key()
-        return self.__status.get(status, key, parameter)
+        return self.get_statusmap().get(key, parameter)
 
-    def set_status(self, **kwargs)
-        """Update the internal status (does not change the file)."""
-        for key, value in kwargs.items():
-            if not key in self.__status:
-                raise KeyError('"{}" is not part of the status'.format(key))
-            self.__status[key] = str(value)
+    def set_status(self, key, soft=True, **status):
+        """Update the status for the given key.
 
-    def get_key(self):
-        """Get the current key, will be loaded from status map if needed."""
-        if self.get_status()['key'] == '':
-            self.load_current()
-        return self.get_status()['key']
+        Positional arguments:
+        key -- the key [string]
 
-    def get_type(self):
-        """Get the current type, will be loaded from status map if needed."""
-        if self.get_status()['type'] == '':
-            self.load_current()
-        return self.get_status()['type']
+        Keyword arguments:
+        soft -- do not yet write to disc
+        **status -- keywords
+        """
+        logger.debug('updating status for key: "{}" ({})'.format(key, ','.join(
+            ['"{}": "{}"'.format(kw,v) for kw, v in status.items()])))
+        self.get_statusmap().update(key, soft=soft, **status)
 
-    def load_current(self):
+    def get_current_key(self):
         """Get the key of the current / last played playlist or folder."""
-        current = self.get_statusmap().get_current()
-        if current is None:
-            raise ValueError('#CURRENT not defined')
-        self.get_status().update(current)
+        logger.debug('returning current key ({})'.format(
+            self.get_statusmap().get_current_key()))
+        return self.get_statusmap().get_current_key()
 
-    def persist_current(self, key, type):
+    def set_current_key(self, key):
         """Set the key of the current / last played playlist or folder."""
-        self.get_statusmap().set_current(key, type)
+        logger.debug('setting current key to {}'.format(key))
+        self.get_statusmap().set_current_key(key)
 
-    def load_status(self):
-        """Load the status of the currently / last played folder or list."""
-        self.set_status(**self.get_statusmap().get(self.get_current_key()))
+    def key_marks_playlist(self, key):
+        """Return if the key marks a playlist (ends wit .m3u) or a folder.
 
-    def persist_status(self, status):
-        """Write status to the status map."""
-        self.get_statusmap().update(self.get_current_key(), **status)
+        Positional arguments:
+        key -- the key
+        """
+        playlist = key[-3:] == 'm3u'
+        logger.debug('key "{}" is {}a playlist'.format(key,
+            ('' if playlist else 'not ')))
+        return playlist
 
     def mpc(self, *args, **kwargs):
         """Call mpc as a subprocess and return its output.
@@ -111,26 +90,46 @@ class Mpc(Plugin):
         if len(args) > 0:
             call += args
 
+        logger.debug('calling mpc with: {}'.format(','.join(
+            [item for item in call])))
+
         if sys.version_info[1] >= 7:
             # capture output is new and in this case required with python >= 3.7
-            return subprocess.run(call, capture_output=True,
+            result = subprocess.run(call, capture_output=True,
                     encoding="utf-8", **kwargs)
         else:
-            return subprocess.run(call, encoding="utf-8", **kwargs,
+            result = subprocess.run(call, encoding="utf-8", **kwargs,
                     stdout=subprocess.PIPE)
+
+        raw = result.stdout
+        if result.returncode != 0 or raw[:9] == 'mpd error':
+            # error
+            logger.error('error calling mpc: "{}"'.format(raw.strip()))
+            return None
+        return raw
 
     def query_mpd_status(self):
         """Query the status (filename, position, name, volume, status)."""
-        # get the status and remove the last character as it is a "\n"
-        raw = self.mpc('status', '-f', '%file%@@%position%@@%name%').stdout[:-1]
-        raw = raw.split('\n')
+        logger.debug('querying mpd status')
+        # get the status
+        raw = self.mpc('status', '-f', '%file%@@%position%@@%name%')[:-1]
 
         status = {}
+
+        if raw is None:
+            # error
+            logger.debug('mpd error')
+            return status
+
+        # remove the last character as it is a "\n" and split the lines
+        raw = raw.split('\n')
 
         if len(raw) == 1:
             # not playing
             # that's the only information we can get
-            return status.update({'status': 'stopped'})
+            logger.debug('mpd stopped')
+            status.update({'status': 'stopped'})
+            return status
 
         # line 1 looks like
         # FILENAME@@POSITION@@NAME
@@ -140,14 +139,22 @@ class Mpc(Plugin):
         result = re.match(re.compile(
             '\[(?P<status>\w+)\]\s+#(?P<position>[0-9]+)/[0-9]+\s+' +
             '(?P<time>[0-9:]+)/[0-9:]+\s+\([0-9]+%\)'), raw[1])
-        status.update(result.groupdict())
+        if not result is None:
+            status.update(result.groupdict())
+        else:
+            logger.debug('did not recognize line: "{}"'.format(raw[1]))
         # line 3 looks like
         # volume:VOLUME%   repeat: off random: off single: off consume: off
         result = re.match(re.compile(
-            'volume:\s*(?P<volume>[0-9]+)%\s+repeat:\s*(?P<repeat>[a-z]+)\s+' +
+            'volume:\s*(?P<volume>[na/0-9]+)%\s+repeat:\s*(?P<repeat>[a-z]+)\s+' +
             'random:\s*(?P<random>[a-z]+)\s+single:\s*(?P<single>[a-z]+)\s+' +
             'consume:\s*(?P<consume>[a-z]+)'), raw[2])
-        status.update(result.groupdict())
+        if not result is None:
+            status.update(result.groupdict())
+        else:
+            logger.debug('did not recognize line: "{}"'.format(raw[2]))
+        logger.debug('mpd status: {}'.format(','.join(
+            ['"{}": "{}"'.format(kw,v) for kw, v in status.items()])))
         return status
 
     def apply_mpd_status(self, key, status):
@@ -156,49 +163,73 @@ class Mpc(Plugin):
         Positional arguments:
         key -- the key aka playlist / folder name
         status -- the status dict with at least key and type
+
+        Returns True / False on success / failure
         """
-        if not set(['key', 'type']).issubset(status):
-            raise ValueError('more status information needed')
+        if status is None:
+            logger.info('no status given')
+            status = {}
+            #return False
+
+        logger.debug('applying key "{}" with status: {}'.format(key, ','.join(
+            ['"{}": "{}"'.format(kw,v) for kw, v in status.items()])))
 
         # clear playlist
         self.mpc('clear')
 
         # load files
-        if status['type'] == 'playlist':
-            self.mpc('load', key)
+        if self.key_marks_playlist(key):
+            logger.debug('loading playlist')
+            result = self.mpc('load', key[:-4])
         else:
-            self.mpc('add', key)
+            logger.debug('loading folder')
+            result = self.mpc('add', key)
+
+        if result is None:
+            # some error occured during loading
+            logger.error('some error occured while loading the playlist.')
+            return False
 
         # set some finer details of playback
-        for key, state in status.items:
+        for keyword, state in status.items():
             if key in ['key', 'type', 'position', 'time', 'status']:
                 # those are used to load a queue or play which needs to be done
                 # beforehand and afterwards respectively
                 continue
-            self.mpc(key, state)
+            result = self.mpc(keyword, state)
+            if result is None:
+                logger.error('error setting "{}" to "{}"'.format(keyword, state))
 
         # jump to position playing
         if 'position' in status:
-            self.mpc('play', status['position'])
+            logger.debug('jumping to position in playlist')
+            result = self.mpc('play', status['position'])
+            if result is None:
+                logger.debug('could not jump to position playlist')
             self.mpc('toggle')
 
         if 'time' in status:
-            self.mpc('seek', status['time'])
+            logger.debug('seeking position in track')
+            result = self.mpc('seek', status['time'])
+            if result is None:
+                logger.debug('could not jump to position in track')
+        return True
 
     def check_mpd_queue_is_current_list(self):
         """Check if mpd's queue is the list we expect to be looking at."""
+        logger.debug('comparing playlists')
 
-        if self.get_type() == 'playlist':
+        if self.key_marks_playlist(self.get_current_key()) == 'playlist':
             # get the queue
-            queue = self.mpc('playlist').stdout.strip()
+            queue = self.mpc('playlist').strip()
             # get the contents of the playlist
-            assumed_list = self.mpc('playlist', self.get_key()).stdout.strip()
+            assumed_list = self.mpc('playlist', self.get_current_key()).strip()
         else:
             # get the queue but show filenames
-            queue = self.mpc('playlist', '-f', '%file%').stdout.strip()
+            queue = self.mpc('playlist', '-f', '%file%').strip()
             # find files in the specified folder
             assumed_list = self.mpc(
-                    'search', 'filename', self.get_key()).stdout.strip()
+                    'search', 'filename', self.get_current_key()).strip()
 
         # considered comparing hashes but comparing the strings might be just as
         # fast
@@ -212,14 +243,18 @@ class Mpc(Plugin):
 
         return queue == assumed_list
 
-    # TODO: move status to statusmap
-
     def check_status(self):
-        if self.get_key() is None:
+        logger.debug('checking status')
+        key = self.get_current_key()
+        if key is None:
             # no key known - so nothing can be stored
+            # we don't know what's currently playing and do not have the means
+            # to figure it out because MPD does not store if it's playing a
+            # a playlist or the contents of one or multiple folders
             self.communicate('Don\'t know what to do. Please, load a playlist.',
                     'error')
-            return
+            return False
+        logger.debug('current key: "{}"'.format(key))
 
         if not self.check_mpd_queue_is_current_list():
             # the current playlist differs from what we would expect by looking
@@ -228,33 +263,74 @@ class Mpc(Plugin):
             # client) in the meantime
             self.communicate('Don\'t know what to do. Please, load a playlist.',
                     'error')
-            return
+            return False
+        logger.debug('loaded playlist is expected playlist')
+        return True
 
     def update_status(self):
-        status = self.query_status()
+        """Update status in statusmap."""
+        logger.debug('updating status')
+        status = self.query_mpd_status()
 
         if status['status'] == 'stopped':
-            # cannot store something meaningful
+            # cannot store anything meaningful
+            logger.debug('cancel status update, not playing')
             return
 
         # persist the status
-        self.set_status(status)
+        key = self.get_current_key()
+        if key is None:
+            logger.debug('cancel status update, no current key')
+            return
+        self.set_status(key, soft=False, **status)
 
     def play(self, *args, **kwargs):
-        result = self.mpc('play')
+        logger.debug('play: {}'.format(kwargs['key']))
+        status = self.query_mpd_status()
+
+        if not status['status'] == 'stopped':
+            # something is playing / paused
+            if self.check_status():
+                # we know what's playing
+                if self.get_current_key == kwargs['key']:
+                    # and it's the same as requested
+                    # so we need not do anything
+                    logger.debug('already playing')
+                    return
+
+        try:
+            if not self.apply_mpd_status(kwargs['key'],
+                    self.get_status(kwargs['key'])):
+                return
+            result = self.mpc('play')
+            if result is None:
+                raise ChildProcessError
+        except (KeyError, ChildProcessError) as e:
+            self.debug('error loading status: {}'.format(','.join(
+                ['{},{}'.format(kw,v) for kw,v in kwargs.items()])))
+            self.communicate('Could not load playlist.')
+        self.set_current_key(kwargs['key'])
+        self.update_status()
 
     def simple_command(self, do):
         """Wrapper around the more simple functions (toggle, stop, etc.)."""
-        self.check_status()
+        logger.debug('simple command: {}'.format(do))
+        if not self.check_status():
+            return
         self.mpc(do)
         self.update_status()
 
     def volume(self, direction=None, step=None):
-        self.check_status()
+        if not self.check_status():
+            return
         if not direction in ['+', '-']:
             logger.error('no such action "{}"'.format(action))
             return
         if step is None:
             step = self.get_config().get('MPC', 'volume_step', default="5",
                     variable_type="str")
-        result = self.mpc('volume', direction+step)
+
+        logger.debug('changing volume: {}{}'.format(direction, step))
+        result = self.mpc('volume', '{}{}'.format(direction, step))
+        if result is None:
+            logger.error('could not change volume')

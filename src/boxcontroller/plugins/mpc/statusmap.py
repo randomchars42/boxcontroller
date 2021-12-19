@@ -12,12 +12,15 @@ logger = logging.getLogger('boxcontroller.plugin.' + __name__)
 class StatusMap(KeyMap):
     """Store status information for all configured folders and playlists.
 
-    The folder / playlist name is used as key. The special key #CURRENT is used
+    The folder / playlist name is used as key. The special key CURRENT is used
     to store the key of the currently / last played folder / playlist
 
     StatusMap is a special case of KeyMap as only the key and keyworded data
     gets stored.
     """
+
+    status_keywords = ['status', 'position', 'time', 'file', 'name',
+            'repeat', 'random', 'single', 'consume']
 
     def __init__(self, config):
         """Initialise variables and load map from file(s)."""
@@ -43,13 +46,13 @@ class StatusMap(KeyMap):
         """
         try:
             if parameter is None:
-                return self._get_map()[key]['positional']
-            return self._get_map()[key]['positional'][parameter]
+                return self.get_map()[key]['keyword'].copy()
+            return self.get_map()[key]['keyword'][parameter]
         except KeyError:
             logger.error('no entry for key: "{}"'.format(key))
             return None
 
-    def update(self, key, soft = False, **status):
+    def update(self, key, *args, soft = False, **status):
         """Update, add or delete a status.
 
         Updates the data for a given key incrementally, e.g.,
@@ -61,7 +64,7 @@ class StatusMap(KeyMap):
             - 'volume': '50'
 
         given data:
-            -'time': '02:42'
+            - 'time': '02:42'
 
         will result in:
             - 'type': 'playlist'
@@ -71,22 +74,32 @@ class StatusMap(KeyMap):
 
         Positional arguments:
         key -- the key [string]
+        *args -- positional arguments, if key is CURRENT the first will be used
+                 to store as current key, the rest will be ignored
         soft -- update dict only, do not yet write to disc [boolean]
         **status -- keyworded data [string: string], leave empty to remove entry
         """
-        map = self._get_map()
-        if not key in map:
-            map()[key] = {'positional': {}}
+        logger.debug('updating (soft: {}) map for key "{}": {},{}'.format(soft,
+            key, ','.join(args), ','.join(
+                ['{}={}'.format(kw,v) for kw,v in status.items()])))
+        map = self.get_map()
 
-        try:
-            map()[key]['positional'].update(status)
-        except KeyError:
-            logger.error('Map with no further information (key: "{}")'.format(
-                key))
-            return
+        if not key in map:
+            map.update({key: {'positional': [''], 'keyword': {}}})
+
+        if key == 'CURRENT':
+            map['CURRENT']['positional'][0] = args[0]
+        else:
+            for keyword, state in status.items():
+                if keyword in self.status_keywords:
+                    map[key]['keyword'][keyword] = state
+                else:
+                    logger.debug('dropping unknown status keyword: "{}"'.format(
+                        keyword))
 
         if not soft:
-            super().update(self.get_path(), key, **map[positional])
+            super().update(str(self.get_path()), key, *map[key]['positional'],
+                **map[key]['keyword'])
 
     def remove(self, key):
         """Remove entry with key.
@@ -98,16 +111,16 @@ class StatusMap(KeyMap):
         super().remove(self.get_path(), key)
 
     def get_current_key(self):
-        """Return the special entry #CURRENT."""
+        """Return the special entry CURRENT."""
         try:
-            return self._get_map()['#CURRENT']['positional']['key']
+            return self.get_map()['CURRENT']['positional'][0]
         except KeyError:
             return None
 
     def set_current_key(self, key):
-        """Use the #CURRENT entry to store the key of the current configuration.
+        """Use the CURRENT entry to store the key of the current configuration.
 
         Positional arguments:
         key -- the key [string]
         """
-        self.update('#CURRENT', key=key)
+        self.update('CURRENT', key)
