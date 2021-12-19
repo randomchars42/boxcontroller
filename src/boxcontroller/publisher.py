@@ -18,7 +18,7 @@ class Publisher:
             self._events = {event: {}}
         return self.get_subscribers(event)
 
-    def register(self, event, who, callback=None):
+    def register_listener(self, event, who, callback=None):
         if callback == None:
             try:
                 callback = getattr(who, 'update')

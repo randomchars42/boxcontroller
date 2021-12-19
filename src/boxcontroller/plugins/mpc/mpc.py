@@ -6,12 +6,12 @@ import sys
 import re
 import hashlib
 
-from boxcontroller.plugin import Plugin
+from boxcontroller.listenerplugin import ListenerPlugin
 from . import statusmap
 
 logger = logging.getLogger('boxcontroller.plugin.' + __name__)
 
-class Mpc(Plugin):
+class Mpc(ListenerPlugin):
 
     def on_init(self):
         self.__statusmap = statusmap.StatusMap(self.get_config())
@@ -21,15 +21,6 @@ class Mpc(Plugin):
         self.register('next', lambda: self.simple_command('next'))
         self.register('previous', lambda: self.simple_command('previous'))
         self.register('volume', self.volume)
-        self.register('toggle', self.test)
-
-    def test(self):
-        #self.play(key="Mark Knopfler Tes")
-        self.play(key="Mark Knopfler Test.m3u")
-        #self.simple_command('next')
-        #self.simple_command('toggle')
-        #self.simple_command('next')
-        #self.simple_command('next')
 
     def get_statusmap(self):
         return self.__statusmap

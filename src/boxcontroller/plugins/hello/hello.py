@@ -2,11 +2,11 @@
 
 import logging
 
-from boxcontroller.plugin import Plugin
+from boxcontroller.listenerplugin import ListenerPlugin
 
 logger = logging.getLogger('boxcontroller.plugin.' + __name__)
 
-class Hello(Plugin):
+class Hello(ListenerPlugin):
     """Example plugin.
 
     Initialises on on_plugins_loaded().

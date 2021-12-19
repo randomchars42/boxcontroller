@@ -8,6 +8,7 @@ import pkgutil
 from importlib import import_module
 import pkg_resources
 import argparse
+import multiprocessing
 
 from pathlib import Path
 
@@ -51,7 +52,7 @@ class BoxController(publisher.Publisher):
         self._plugins['main'] = self
         self._load_plugins(self._path_plugins)
         self._load_plugins(self._path_plugins_user.expanduser().resolve())
-        self.dispatch('on_init')
+        self.dispatch('init')
 
     def _load_plugins(self, path):
         """Gather all packages under path as plugins.
@@ -69,8 +70,7 @@ class BoxController(publisher.Publisher):
             package = import_module('{}.{}'.format(name, name))
             classname = name[0].upper() + name[1:]
             self._plugins[classname] = getattr(package, classname)(
-                        name=classname, publisher=self,
-                        config=self.get_config())
+                        name=classname, main=self)
 
         logger.info('plugins loaded from {}'.format(path))
 
@@ -86,7 +86,7 @@ class BoxController(publisher.Publisher):
         """
         if not name in self._plugins:
             raise KeyError('No such plugin.')
-        return self._plugins[name]
+        return self.get_plugins()[name]
 
     def get_config(self):
         """Return a reference to the config."""
@@ -119,6 +119,30 @@ class BoxController(publisher.Publisher):
         """
         self._event_map.update(key, event, *args, **kwargs)
 
+    def run(self):
+        """Start a process for each ProcessPlugin and listen to their input.
+
+        Modified after: https://pymotw.com/3/multiprocessing/communication.html
+        """
+        logger.debug('running process plugins')
+        from . import processplugin
+        self.get_plugins()['bla'] = processplugin.ProcessPlugin(name='bla', main=self)
+        self.__to_plugins = multiprocessing.JoinableQueue()
+        self.__from_plugins = multiprocessing.Queue()
+        self.dispatch('start_processes', self.__to_plugins, self.__from_plugins)
+        i = 0
+        while i < 3:
+            logger.debug('awaiting signals')
+            result = self.__from_plugins.get()
+            print(result)
+            i += 1
+        self.stop()
+
+    def stop(self):
+        """Stop all Processplugins."""
+        self.dispatch('stop_processes')
+
+
 def main():
     """Run the application.
 
@@ -146,7 +170,7 @@ def main():
     #boxcontroller.process_input('yourself')
     #boxcontroller.process_input('joke')
     #boxcontroller.define_event('3213', 'play', file='v.mp3', param='value')
-    boxcontroller.process_input('toggle')
+    #boxcontroller.process_input('toggle')
     #boxcontroller.process_input('volume_inc')
     #boxcontroller.process_input('volume_inc')
     #boxcontroller.process_input('volume_inc')
@@ -155,6 +179,7 @@ def main():
     #boxcontroller.process_input('volume_dec')
     #boxcontroller.process_input('volume_dec')
     #boxcontroller.process_input('volume_dec')
+    boxcontroller.run()
 
 def signal_handler(signal_num, frame):
     """Log signal and call sys.exit(0).
