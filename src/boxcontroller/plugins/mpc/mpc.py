@@ -25,8 +25,9 @@ class Mpc(Plugin):
 
     def test(self):
         #self.play(key="Mark Knopfler Tes")
-        #self.play(key="Mark Knopfler Test.m3u")
-        self.simple_command('next')
+        self.play(key="Mark Knopfler Test.m3u")
+        #self.simple_command('next')
+        #self.simple_command('toggle')
         #self.simple_command('next')
         #self.simple_command('next')
 
@@ -192,7 +193,7 @@ class Mpc(Plugin):
 
         # set some finer details of playback
         for keyword, state in status.items():
-            if key in ['key', 'type', 'position', 'time', 'status']:
+            if keyword in ['file', 'name', 'position', 'time', 'status']:
                 # those are used to load a queue or play which needs to be done
                 # beforehand and afterwards respectively
                 continue
@@ -282,10 +283,10 @@ class Mpc(Plugin):
             return
         status = self.query_mpd_status()
 
-        if status['status'] == 'stopped':
-            # cannot store anything meaningful
-            logger.debug('cancel status update, not playing')
-            return
+        #if status['status'] == 'stopped':
+        #    # cannot store anything meaningful
+        #    logger.debug('cancel status update, not playing')
+        #    return
 
         # persist the status
         key = self.get_current_key()
