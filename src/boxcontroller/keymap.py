@@ -111,15 +111,18 @@ class KeyMap():
                 for (key, value) in kwargs.items()]
         return self.get_delimiter().join([key, *args, *flattend_kwargs])
 
-    def update(self, path, key, *args, **kwargs):
+    def update(self, path, mapkey, *args, **kwargs):
         """Update, add or delete an entry.
 
         Positional arguments:
         path -- the path of the file [string]
-        key -- the key [string]
+        mapkey -- the key [string]
         *args -- positional data [string], leave empty to remove entry
         **params -- keyworded data [string: string], leave empty to remove entry
         """
+        logger.debug('updating keymap at "{}" for key "{}" with: {},{}'.format(
+            path, mapkey, ','.join(args), ','.join(
+                ['{}={}'.format(kw,v) for kw,v in kwargs.items()])))
         try:
             with open(path, 'r') as map:
                 lines = map.readlines()
@@ -127,29 +130,29 @@ class KeyMap():
             logger.debug('could not open file at ' + str(path))
             lines = []
 
-        key_length = len(key)
+        key_length = len(mapkey)
         done = False
 
         for i, line in enumerate(lines):
-            if line[:key_length + 1] == key + self.get_delimiter():
+            if line[:key_length + 1] == mapkey + self.get_delimiter():
                 # the key is already mapped
                 # make sure we don't accidentally catch a longer key by adding
                 # the required delimiter to the end of the key
                 if len(args) > 0 or len(kwargs) > 0:
                     # update the mapping
-                    lines[i] = self._to_map_line(key, args, kwargs)
-                    logger.debug('updated entry for key "{}"'.format(key))
+                    lines[i] = self._to_map_line(mapkey, args, kwargs)
+                    logger.debug('updated entry for key "{}"'.format(mapkey))
                 else:
                     # remove the mapping
                     lines[i].pop(i)
-                    logger.debug('removed entry for key "{}"'.format(key))
+                    logger.debug('removed entry for key "{}"'.format(mapkey))
                 done = True
                 break
 
         if not done and (len(args) > 0 or len(kwargs) > 0):
             # there was no mapping so append it
-            lines.append(self._to_map_line(key, args, kwargs))
-            logger.info('added entry for key "{}"'.format(key))
+            lines.append(self._to_map_line(mapkey, args, kwargs))
+            logger.info('added entry for key "{}"'.format(mapkey))
 
         path = Path(path)
         if not path.parent.exists():
@@ -157,7 +160,7 @@ class KeyMap():
 
         with open(path, 'w') as map:
             map.write('\n'.join(lines))
-            logger.debug('updated map ("{}")'.format(path))
+            logger.debug('updated map: "{}"'.format(path))
 
         self.reset()
 
