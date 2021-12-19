@@ -2,56 +2,44 @@
 
 import logging
 import multiprocessing
-import time
 
-#from . import plugin
-from . import listenerplugin
+from . import plugin
 
 logger = logging.getLogger(__name__)
 
-#class ProcessPlugin(plugin.Plugin):
-class ProcessPlugin(listenerplugin.ListenerPlugin):
+class ProcessPlugin(plugin.Plugin, multiprocessing.Process):
+    """Base class for plugins using their own process.
+
+    Modified after: https://pymotw.com/3/multiprocessing/communication.html
+    """
 
     def __init__(self, *args, **kwargs):
-        #plugin.Plugin.__init__(self, *args, **kwargs)
-        listenerplugin.ListenerPlugin.__init__(self, *args, **kwargs)
-        self.register('start_processes', self.on_start_processes)
-        self.register('stop_processes', self.on_stop_processes)
+        """Register with main process to be started and store queues.
 
-    def get_process(self):
-        return self.__process
+        Do not overwrite this function. Or use:
+        ProcessPlugin.__init__(self, *args, **kwargs)
+        """
+        plugin.Plugin.__init__(self, *args, **kwargs)
+        multiprocessing.Process.__init__(self)
+        kwargs['main'].register_process(self.get_name(), self)
+        self.__to_plugins = kwargs['to_plugins']
+        self.__from_plugins = kwargs['from_plugins']
 
-    def on_init(self):
-        return
+    def queue_get(self):
+        """Get messages off the queue."""
+        return self.__to_plugins.get()
 
-    def on_start_processes(self, to_plugins, from_plugins):
-        logger.debug('starting {}:'.format(self.get_name()))
-        self.__process = multiprocessing.Process(
-            name=self.get_name(),
-            target=ProcessPlugin.run,
-            args=(to_plugins, from_plugins)
-        )
-        self.get_process().start()
+    def queue_put(self, input_string):
+        """Put string messages onto the queue.
 
-    def on_stop_processes(self):
-        self.get_process().terminate()
-        self.get_process().join()
+        Positional arguments:
+        input_string -- the string that will become input for BoxController
+        """
+        return self.__from_plugins.put(input_string)
 
-    def run(to_plugins, from_plugins):
-        do = ['play', 'next', 'stop']
-        i = 0
-        while True:
-            #next_signal = to_plugins.get()
-            #if next_signal is None:
-            #    # poison pill means shutdown
-            #    logger.debug('{}: Exiting'.format(
-            #        multiprocessing.current_process().name))
-            #    to_plugins.task_done()
-            #    break
-            while i < len(do):
-                print('{}: {}'.format(
-                        multiprocessing.current_process().name, do[i]))
-                from_plugins.put(do[i])
-                i += 1
-                time.sleep(1)
-            #to_plugins.task_done()
+    def run(self):
+        raise NotImplementedError('Overwrite this method to get your process ' +
+                'running.')
+
+    def __del__(self):
+        logger.debug('stopping')

@@ -24,6 +24,9 @@ class BoxController(publisher.Publisher):
         self._plugins = {}
         self._config = config
         self._event_map = evt.EventMap(config)
+        self.__processes = {}
+        self.__to_plugins = multiprocessing.JoinableQueue()
+        self.__from_plugins = multiprocessing.Queue()
 
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
             'plugins'))
@@ -70,7 +73,8 @@ class BoxController(publisher.Publisher):
             package = import_module('{}.{}'.format(name, name))
             classname = name[0].upper() + name[1:]
             self._plugins[classname] = getattr(package, classname)(
-                        name=classname, main=self)
+                    name=classname, main=self, to_plugins=self.__to_plugins,
+                    from_plugins=self.__from_plugins)
 
         logger.info('plugins loaded from {}'.format(path))
 
@@ -119,28 +123,43 @@ class BoxController(publisher.Publisher):
         """
         self._event_map.update(key, event, *args, **kwargs)
 
+    def get_processes(self):
+        """Return the dict of ProcessPlugin processes that have registered."""
+        return self.__processes
+
+    def register_process(self, name, reference):
+        """Interface for ProcessPlugins to register themselves.
+
+        Positional arguments:
+        name -- the name of the process [string]
+        reference -- reference to the process object [multiprocess.Process]
+        """
+        self.get_processes()[name] = reference
+
     def run(self):
         """Start a process for each ProcessPlugin and listen to their input.
 
         Modified after: https://pymotw.com/3/multiprocessing/communication.html
         """
         logger.debug('running process plugins')
-        from . import processplugin
-        self.get_plugins()['bla'] = processplugin.ProcessPlugin(name='bla', main=self)
-        self.__to_plugins = multiprocessing.JoinableQueue()
-        self.__from_plugins = multiprocessing.Queue()
-        self.dispatch('start_processes', self.__to_plugins, self.__from_plugins)
+        for name, process in self.get_processes().items():
+            logger.debug('starting process "{}"'.format(name))
+            process.start()
+        logger.debug('started all process plugins')
         i = 0
         while i < 3:
             logger.debug('awaiting signals')
-            result = self.__from_plugins.get()
-            print(result)
+            input_string = self.__from_plugins.get()
+            print(input_string)
             i += 1
         self.stop()
 
     def stop(self):
-        """Stop all Processplugins."""
-        self.dispatch('stop_processes')
+        """Stop all ProcessPlugins."""
+        for name, process in self.get_processes().items():
+            logger.debug('terminating process "{}"'.format(name))
+            process.terminate()
+            process.join()
 
 
 def main():
