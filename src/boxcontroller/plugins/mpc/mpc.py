@@ -219,17 +219,23 @@ class Mpc(Plugin):
         """Check if mpd's queue is the list we expect to be looking at."""
         logger.debug('comparing playlists')
 
-        if self.key_marks_playlist(self.get_current_key()) == 'playlist':
+        if self.key_marks_playlist(self.get_current_key()):
             # get the queue
             queue = self.mpc('playlist').strip()
             # get the contents of the playlist
-            assumed_list = self.mpc('playlist', self.get_current_key()).strip()
+            assumed_list = self.mpc('playlist',
+                    self.get_current_key()[:-4]).strip()
         else:
             # get the queue but show filenames
             queue = self.mpc('playlist', '-f', '%file%').strip()
             # find files in the specified folder
             assumed_list = self.mpc(
                     'search', 'filename', self.get_current_key()).strip()
+
+        #print('Queue:')
+        #print(queue)
+        #print('\nList')
+        #print(assumed_list)
 
         # considered comparing hashes but comparing the strings might be just as
         # fast
@@ -251,6 +257,7 @@ class Mpc(Plugin):
             # we don't know what's currently playing and do not have the means
             # to figure it out because MPD does not store if it's playing a
             # a playlist or the contents of one or multiple folders
+            logger.debug('no current key')
             self.communicate('Don\'t know what to do. Please, load a playlist.',
                     'error')
             return False
@@ -264,12 +271,15 @@ class Mpc(Plugin):
             self.communicate('Don\'t know what to do. Please, load a playlist.',
                     'error')
             return False
+            logger.debug('not in expected playlist')
         logger.debug('loaded playlist is expected playlist')
         return True
 
     def update_status(self):
         """Update status in statusmap."""
         logger.debug('updating status')
+        if not self.check_status():
+            return
         status = self.query_mpd_status()
 
         if status['status'] == 'stopped':
@@ -315,14 +325,10 @@ class Mpc(Plugin):
     def simple_command(self, do):
         """Wrapper around the more simple functions (toggle, stop, etc.)."""
         logger.debug('simple command: {}'.format(do))
-        if not self.check_status():
-            return
         self.mpc(do)
         self.update_status()
 
     def volume(self, direction=None, step=None):
-        if not self.check_status():
-            return
         if not direction in ['+', '-']:
             logger.error('no such action "{}"'.format(action))
             return
@@ -334,3 +340,5 @@ class Mpc(Plugin):
         result = self.mpc('volume', '{}{}'.format(direction, step))
         if result is None:
             logger.error('could not change volume')
+        if not self.check_status():
+            return
