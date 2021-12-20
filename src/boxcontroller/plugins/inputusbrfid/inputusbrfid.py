@@ -14,11 +14,18 @@ class Inputusbrfid(ProcessPlugin):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        ProcessPlugin.__init__(self, *args, **kwargs)
+        self.__device_path = kwargs['main'].get_config().get('InputUSBRFID',
+                'device', default=None)
+        if self.__device_path is None:
+            logger.error('No device defined')
+            return
+
     def run(self):
         logger.debug('running')
-        device = InputDevice('/dev/input/event21')
         self.__keys = "X^1234567890XXXXqwertzuiopXXXXasdfghjklXXXXXyxcvbnmXXXXXXXXXXXXXXXXXXXXXXX"
-        self.__device = device
+        self.__device = InputDevice(self.__device_path)
 
         while True:
             time.sleep(0.2)

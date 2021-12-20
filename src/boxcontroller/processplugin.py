@@ -16,7 +16,7 @@ class ProcessPlugin(plugin.Plugin, multiprocessing.Process):
     def __init__(self, *args, **kwargs):
         """Register with main process to be started and store queues.
 
-        Do not overwrite this function. Or use:
+        If you need to overwrite this function don't forget to use:
         ProcessPlugin.__init__(self, *args, **kwargs)
         """
         plugin.Plugin.__init__(self, *args, **kwargs)
