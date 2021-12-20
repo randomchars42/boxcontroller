@@ -1,10 +1,11 @@
 yourself|smile|at=yourself
 joke|smile|at=joke
-toggle|toggle
-play|play
+GPIO_23_R|toggle
 pause|pause
 stop|stop
 next|next
 previous|previous
 volume_inc|volume|direction=+
 volume_dec|volume|direction=-
+0201980579|mpd_play|key=Namika.m3u
+0225023699|mpd_play|key=Mark Knopfler Test.m3u

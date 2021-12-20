@@ -19,7 +19,7 @@ class Inputgpiod(ProcessPlugin):
                 'chip', default=None, variable_type='int')
         pins = kwargs['main'].get_config().get('InputGPIOD',
                 'pins', default='')
-        self.__pins = [int(pins) for pins.split(',')]
+        self.__pins = [int(pin) for pin in pins.split(',')]
         if self.__chip is None or len(self.__pins) == 0:
             logger.error('No chip or pins defined')
             return
