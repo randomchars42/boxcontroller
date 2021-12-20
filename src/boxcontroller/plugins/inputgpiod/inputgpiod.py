@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from gpiodmonitor import GPIODMonitor
+from gpiodmonitor import gpiodmonitor.GPIODMonitor
 import time
 import logging
 
