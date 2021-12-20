@@ -146,12 +146,10 @@ class BoxController(publisher.Publisher):
             logger.debug('starting process "{}"'.format(name))
             process.start()
         logger.debug('started all process plugins')
-        i = 0
-        while i < 3:
+        while True:
             logger.debug('awaiting signals')
             input_string = self.__from_plugins.get()
-            print(input_string)
-            i += 1
+            self.process_input(input_string)
         self.stop()
 
     def stop(self):

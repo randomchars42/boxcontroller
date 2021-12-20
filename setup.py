@@ -62,7 +62,8 @@ setup(
         'setuptools',
     ],
     install_requires=[
-        'gpiodmonitor>=0.1.0'
+        #'gpiodmonitor>=0.1.0',
+        'evdev >= 1.4.0'
     ],
     entry_points={
         'console_scripts':['main=boxcontroller.boxcontroller:main']
