@@ -30,15 +30,18 @@ class ListenerPlugin(plugin.Plugin):
     def get_config(self):
         return self.get_main().get_config()
 
-    def register(self, event, callback):
+    def register(self, event, callback, exclusive=False):
         """Register to an event.
 
         Positional arguments:
         event -- the event to register to [string]
-        callback -- the function / lambda to call
+        callback -- the function / lambda to call [function]
+
+        Keyword arguments:
+        exclusive -- unregister other listeners to this event [boolean]
         """
         self.get_publisher().register_listener(event, self.get_name(),
-                callback)
+                callback=callback, exclusive=exclusive)
 
     def unregister(self, event):
         """Unregister from an event.

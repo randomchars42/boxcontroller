@@ -23,7 +23,7 @@ class Inputusbrfid(ProcessPlugin):
         while True:
             time.sleep(0.2)
             card_id = self.read_card()
-            self.queue_put(card_id)
+            self.queue_put(card_id.strip())
 
         #with open( "/dev/input/event21", "rb" ) as input_handle:
         #    while 1:

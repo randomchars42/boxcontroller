@@ -15,12 +15,13 @@ class Mpc(ListenerPlugin):
 
     def on_init(self):
         self.__statusmap = statusmap.StatusMap(self.get_config())
-        self.register('play', self.play)
-        self.register('toggle', lambda: self.simple_command('toggle'))
-        self.register('stop', lambda: self.simple_command('stop'))
-        self.register('next', lambda: self.simple_command('next'))
-        self.register('previous', lambda: self.simple_command('previous'))
-        self.register('volume', self.volume)
+        # register only mpd_play initially so we do not block the other commands
+        # the other listeners (toggle, next, ...) will be registered by
+        # Mpc.play().
+        # If another plugin will be started that plays back media and needs
+        # exclusive input from these signals it will register with its
+        # play-function and unregister our other listeners (toggle, next, ...)
+        self.register('mpd_play', self.play, True)
 
     def get_statusmap(self):
         return self.__statusmap
@@ -288,6 +289,14 @@ class Mpc(ListenerPlugin):
 
     def play(self, *args, **kwargs):
         logger.debug('play: {}'.format(kwargs['key']))
+
+        # seize control!
+        self.register('toggle', lambda: self.simple_command('toggle'), True)
+        self.register('stop', lambda: self.simple_command('stop'), True)
+        self.register('next', lambda: self.simple_command('next'), True)
+        self.register('previous', lambda: self.simple_command('previous'), True)
+        self.register('volume', self.volume)
+
         status = self.query_mpd_status()
 
         if not status['status'] == 'stopped':

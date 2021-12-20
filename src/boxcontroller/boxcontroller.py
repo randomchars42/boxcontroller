@@ -108,6 +108,7 @@ class BoxController(publisher.Publisher):
         try:
             event, data = self._event_map.get(string)
         except KeyError:
+            logger.info('unknown')
             return
 
         self.dispatch(event, *data['positional'], **data['keyword'])
