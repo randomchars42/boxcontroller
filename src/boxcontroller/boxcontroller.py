@@ -82,11 +82,20 @@ class BoxController(publisher.Publisher):
         """
         logger.info('loading plugins from {}'.format(path))
 
+        blacklist = self.get_config().get('Plugins', 'blacklist', default='')
+        blacklist = [item.lower() for item in blacklist.split(',')]
+
         sys.path.append(str(path))
         for file in path.glob('*'):
             if file.name == '__pycache__' or not file.is_dir():
                 continue
+
             name = file.name
+
+            if name.lower() in blacklist:
+                logger.debug('blacklisted plugin: {}'.format(classname))
+                continue
+
             package = import_module('{}.{}'.format(name, name))
             classname = name[0].upper() + name[1:]
             self._plugins[classname] = getattr(package, classname)(
