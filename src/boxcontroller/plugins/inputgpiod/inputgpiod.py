@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from gpiodmonitor import gpiodmonitor.GPIODMonitor
+from gpiodmonitor.gpiodmonitor import GPIODMonitor
 import time
 import logging
 
@@ -44,6 +44,7 @@ class Inputgpiod(ProcessPlugin):
             monitor.register(pin,
                 on_pressed = lambda: self.on_pressed(pin),
                 on_released = lambda: self.on_released(pin))
+        logger.debug('listening to pins')
         monitor.run()
 
 
