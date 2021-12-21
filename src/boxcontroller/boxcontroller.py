@@ -31,9 +31,26 @@ class BoxController(publisher.Publisher):
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
             'plugins'))
         self._path_plugins_user = Path(config.get('Paths', 'plugins'))
+        path_eventmap = Path(config.get('Paths', 'eventmap'))
+
+        self.setup(path_eventmap, self._path_plugins_user)
 
         self.load_plugins()
         self.load_event_map()
+
+    def setup(self, *args):
+        """Make sure paths to config, plugins etc. are accessible."""
+        logger.debug('checking paths')
+        for path in args:
+            target = path.parent.expanduser().resolve()
+            if target.exists():
+                logger.debug('path "{}" exists'.format(str(target)))
+            else:
+                logger.debug('path "{}" does not exist'.format(str(target)))
+                try:
+                    target.mkdir(parents=True, exist_ok=True)
+                except OSError:
+                    logger.error('could not create path "{}"'.format(str(target)))
 
     def load_event_map(self):
         """Trigger a (re-)load of the event mappings."""
