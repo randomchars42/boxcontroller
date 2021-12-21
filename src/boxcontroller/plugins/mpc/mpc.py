@@ -78,7 +78,7 @@ class Mpc(ListenerPlugin):
         *args -- one string for each parameter part passed to mpc [string]
         **kwargs -- passed as arguments to subprocess.run()
         """
-        call = ['mpc', '--host=melone', '--verbose']
+        call = ['mpc']
 
         if len(args) > 0:
             call += args
