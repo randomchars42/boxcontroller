@@ -14,7 +14,7 @@ class Plugin:
         initialisation of variables.
 
         If you must, do not forget to call this constructor:
-        super(Plugin, self).__init__(*args, **kwargs)
+        Plugin.__init__(self, *args, **kwargs)
         """
         self.__name = kwargs['name']
 
