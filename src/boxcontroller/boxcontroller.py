@@ -93,7 +93,7 @@ class BoxController(publisher.Publisher):
             name = file.name
 
             if name.lower() in blacklist:
-                logger.debug('blacklisted plugin: {}'.format(classname))
+                logger.debug('blacklisted plugin: {}'.format(name))
                 continue
 
             package = import_module('{}.{}'.format(name, name))
