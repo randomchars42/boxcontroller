@@ -24,7 +24,9 @@ class EventMap(keymap.KeyMap):
     def __init__(self, config):
         """Initialise variables and load map from file(s)."""
         super().__init__(config)
-        self.__path_user_map = Path(self.get_config().get('Paths', 'eventmap'))
+        self.__path_user_map = Path(
+                config.get('Paths', 'user_config'),
+                self.get_config().get('Paths', 'eventmap'))
         self.__path_user_map = self.__path_user_map.expanduser().resolve()
         self.reset()
 

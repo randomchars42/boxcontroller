@@ -13,7 +13,7 @@ class Config():
 
     Configuration can be set in two different ways:
     * APPLICATION_PATH/settings/config.ini (application's defaults)
-    * ~/.config/boxcontroller/config.ini
+    * path specified in config above (~/.config/boxcontroller/config.ini)
     * script params
     Where the latter configurations override the former configurations.
     """
@@ -28,9 +28,9 @@ class Config():
         # load from APPLICATION_PATH/settings/config.ini
         path = Path(pkg_resources.resource_filename(__name__,
             'settings/config.ini'))
-        config = self._load(config, path)
-        # load from ~/.config/boxcontroller
-        path = Path.home() / '.config/boxcontroller/config.ini'
+        self.__config = self._load(config, path)
+        # load from user config
+        path = Path(self.get('Paths', 'user_config'), 'config.ini')
         path = path.expanduser().resolve()
         self.__config = self._load(config, path)
 

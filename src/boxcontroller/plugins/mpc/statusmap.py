@@ -25,7 +25,9 @@ class StatusMap(KeyMap):
     def __init__(self, config):
         """Initialise variables and load map from file(s)."""
         super().__init__(config)
-        self.__path = Path(self.get_config().get('MPC', 'path_status'))
+        self.__path = Path(
+                config.get('Paths', 'user_config'),
+                self.get_config().get('MPC', 'path_status'))
         self.__path = self.__path.expanduser().resolve()
         self.reset()
 

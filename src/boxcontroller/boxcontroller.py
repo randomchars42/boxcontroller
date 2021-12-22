@@ -23,18 +23,22 @@ class BoxController(publisher.Publisher):
     def __init__(self, config):
         self._plugins = {}
         self._config = config
-        self._event_map = evt.EventMap(config)
         self.__processes = {}
         self.__to_plugins = multiprocessing.JoinableQueue()
         self.__from_plugins = multiprocessing.Queue()
 
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
             'plugins'))
-        self._path_plugins_user = Path(config.get('Paths', 'plugins'))
-        path_eventmap = Path(config.get('Paths', 'eventmap'))
+        self._path_plugins_user = Path(
+                config.get('Paths', 'user_config'),
+                config.get('Paths', 'plugins'))
+        path_eventmap = Path(
+                config.get('Paths', 'user_config'),
+                config.get('Paths', 'eventmap'))
 
         self.setup(path_eventmap, self._path_plugins_user)
 
+        self._event_map = evt.EventMap(config)
         self.load_plugins()
         self.load_event_map()
 
