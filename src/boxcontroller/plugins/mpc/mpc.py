@@ -295,7 +295,7 @@ class Mpc(ListenerPlugin):
         self.register('stop', lambda: self.simple_command('stop'), True)
         self.register('next', lambda: self.simple_command('next'), True)
         self.register('previous', lambda: self.simple_command('previous'), True)
-        self.register('volume', self.volume)
+        #self.register('volume', self.volume)
 
         status = self.query_mpd_status()
 
@@ -331,7 +331,7 @@ class Mpc(ListenerPlugin):
 
     def volume(self, direction=None, step=None):
         if not direction in ['+', '-']:
-            logger.error('no such action "{}"'.format(action))
+            logger.error('no such direction "{}"'.format(direction))
             return
         if step is None:
             step = self.get_config().get('MPC', 'volume_step', default="5",
