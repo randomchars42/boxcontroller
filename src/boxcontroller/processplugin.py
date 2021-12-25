@@ -42,4 +42,4 @@ class ProcessPlugin(plugin.Plugin, multiprocessing.Process):
                 'running.')
 
     def __del__(self):
-        logger.debug('stopping')
+        logger.debug('{} is stopping'.format(self.get_name()))
