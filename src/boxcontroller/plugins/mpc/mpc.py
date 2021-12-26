@@ -23,6 +23,9 @@ class Mpc(ListenerPlugin):
         # play-function and unregister our other listeners (toggle, next, ...)
         self.register('mpd_play', self.play, True)
 
+        # this plugin may inhibit shutdown etc. if it marks itself as busy
+        self.register_as_busy_bee()
+
         logger.debug('checking if mpd is already playing')
         if not self.check_status():
             return
@@ -35,6 +38,8 @@ class Mpc(ListenerPlugin):
             self.seize_control()
             # and store the status
             self.update_status()
+            # be busy
+            self.mark_as_busy(True)
 
     def get_statusmap(self):
         return self.__statusmap
@@ -292,6 +297,10 @@ class Mpc(ListenerPlugin):
         #    # cannot store anything meaningful
         #    logger.debug('cancel status update, not playing')
         #    return
+        if status['status'] == 'playing':
+            self.mark_as_busy(True)
+        else:
+            self.mark_as_busy(False)
 
         # persist the status
         key = self.get_current_key()
@@ -334,6 +343,7 @@ class Mpc(ListenerPlugin):
             result = self.mpc('play')
             if result is None:
                 raise ChildProcessError
+            self.mark_as_busy(True)
         except (KeyError, ChildProcessError) as e:
             self.debug('error loading status: {}'.format(','.join(
                 ['{},{}'.format(kw,v) for kw,v in kwargs.items()])))

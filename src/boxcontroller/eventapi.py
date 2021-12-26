@@ -61,3 +61,44 @@ class EventAPI:
 
     def _reset(self):
         self._events = {}
+
+    def register_busy_bee(self, name):
+        """Some plugins may declare the box's state as not idle.
+
+        Actions such as shutdown after X minutes of idle time will be inhibited.
+
+        Positional arguments:
+        name -- name of the plugin [string]
+        """
+        # register busy bee but mark as not busy at the moment
+        self.get_busy_bees()[name] = False
+
+    def get_busy_bees(self):
+        """Return a dict holding busy bees which may inhibit idle time."""
+        try:
+            return self.__busy_bees
+        except ValueError:
+            self.__busy_bees = {}
+            return self.__busy_bees
+
+    def am_i_idle(self):
+        """Am I idle (True) or are there any busy bees inhibitting idle time?"""
+        logger.debug('am I idle?')
+        if not True in self.get_busy_bees().values():
+            logger.debug('I am idle.')
+            self.dispatch('idle')
+        else:
+            logger.debug('someone\'s busy.')
+            self.dispatch('busy')
+
+    def mark_busy_bee_as_busy(self, name, busy):
+        """Mark a plugin as busy or idle.
+
+        Positional arguments:
+        name -- name of the plugin [string]
+
+        Keyword arguments:
+        busy -- busy (True) or not (False) [boolean]
+        """
+        self.get_busy_bees()[name] = busy
+        self.am_i_idle()

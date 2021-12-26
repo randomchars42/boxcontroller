@@ -63,6 +63,23 @@ class ListenerPlugin(plugin.Plugin):
         """
         self.get_main().process_input(input_string)
 
+    def register_as_busy_bee(self):
+        """Mark this plugin as a busy bee potentially inhibitting shutdown, etc.
+        """
+        logger.debug('I\'m a busy bee')
+        self.get_main().register_busy_bee(self.get_name())
+
+    def mark_as_busy(self, busy=True):
+        """Mark this plugin as busy and inhibit actions such as timed shutdown.
+
+        To do this, the plugin must have registered as a busy bee beforehand.
+
+        Keyword arguments:
+        busy -- busy (True) or not (False) [boolean]
+        """
+        logger.debug('setting busy status to {}'.format(str(busy)))
+        self.get_main().mark_busy_bee_as_busy(self.get_name(), busy)
+
     def communicate(self, message, type):
         """Communicate something to the user.
 
