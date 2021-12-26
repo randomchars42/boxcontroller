@@ -141,8 +141,9 @@ class BoxController(EventAPI):
         logger.debug('recieved input: "{}"'.format(string))
         try:
             event, data = self._event_map.get(string)
+            logger.debug('event "{}" mapped to input "{}"'.format(event, string))
         except KeyError:
-            logger.info('unknown')
+            logger.info('no event mapped to input "{}"'.format(string))
             return
 
         self.dispatch(event, *data['positional'], **data['keyword'])

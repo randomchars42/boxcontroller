@@ -52,8 +52,11 @@ class EventAPI:
         logger.debug('"{}" unregistered for event "{}"'.format(who, event))
 
     def dispatch(self, event, *args, **kwargs):
+        if len(self.get_subscribers(event)) == 0:
+            logger.debug('trying to dispatch "{}", noone\'s listening'.format(
+                event))
         for subscriber, callback in self.get_subscribers(event).items():
-            logger.debug('dispatched "{}" for "{}"'.format(event, subscriber))
+            logger.debug('dispatching "{}" for "{}"'.format(event, subscriber))
             callback(*args, **kwargs)
 
     def _reset(self):
