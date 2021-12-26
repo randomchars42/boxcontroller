@@ -53,7 +53,7 @@ class EventAPI:
 
     def dispatch(self, event, *args, **kwargs):
         if len(self.get_subscribers(event)) == 0:
-            logger.debug('trying to dispatch "{}", noone\'s listening'.format(
+            logger.debug('trying to dispatch "{}", no one\'s listening'.format(
                 event))
         for subscriber, callback in self.get_subscribers(event).items():
             logger.debug('dispatching "{}" for "{}"'.format(event, subscriber))
