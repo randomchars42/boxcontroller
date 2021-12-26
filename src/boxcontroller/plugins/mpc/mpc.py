@@ -23,6 +23,19 @@ class Mpc(ListenerPlugin):
         # play-function and unregister our other listeners (toggle, next, ...)
         self.register('mpd_play', self.play, True)
 
+        logger.debug('checking if mpd is already playing')
+        if not self.check_status():
+            return
+        # we know what's on the list
+        status = self.query_mpd_status()
+        if status['status'] == 'playing':
+            # and it's playing
+            logger.debug('MPD\'s already a\'playing')
+            # so seize control over the buttons
+            self.seize_control()
+            # and store the status
+            self.update_status()
+
     def get_statusmap(self):
         return self.__statusmap
 
@@ -287,15 +300,20 @@ class Mpc(ListenerPlugin):
             return
         self.set_status(key, soft=False, **status)
 
-    def play(self, *args, **kwargs):
-        logger.debug('play: {}'.format(kwargs['key']))
-
-        # seize control!
+    def seize_control(self):
+        """Seize control of control buttons' events."""
+        logger.debug('seizing control over the buttons')
         self.register('toggle', lambda: self.simple_command('toggle'), True)
         self.register('stop', lambda: self.simple_command('stop'), True)
         self.register('next', lambda: self.simple_command('next'), True)
         self.register('previous', lambda: self.simple_command('prev'), True)
         #self.register('volume', self.volume)
+
+    def play(self, *args, **kwargs):
+        logger.debug('play: {}'.format(kwargs['key']))
+
+        # seize control!
+        self.seize_control()
 
         status = self.query_mpd_status()
 
