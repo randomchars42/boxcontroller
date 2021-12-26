@@ -281,8 +281,8 @@ class Mpc(ListenerPlugin):
             # client) in the meantime
             self.communicate('Don\'t know what to do. Please, load a playlist.',
                     'error')
-            return False
             logger.debug('not in expected playlist')
+            return False
         logger.debug('loaded playlist is expected playlist')
         return True
 
