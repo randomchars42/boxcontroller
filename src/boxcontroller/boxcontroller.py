@@ -238,7 +238,7 @@ def main():
             except:
                 logger.error('did not understand option "{}"'.format(option))
 
-    if not args.working_dir == '':
+    if not args.user_config == '':
         cfg.set('Paths', 'user_config', args.user_config)
 
     verbosity = ['ERROR', 'WARNING', 'INFO', 'DEBUG']
