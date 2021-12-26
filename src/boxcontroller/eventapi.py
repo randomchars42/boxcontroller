@@ -4,8 +4,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Publisher:
-    """Simple publisher base class."""
+class EventAPI:
+    """Interface for plugins communication synchronously."""
 
     def get_subscribers(self, event):
         try:

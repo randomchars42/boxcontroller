@@ -55,6 +55,14 @@ class ListenerPlugin(plugin.Plugin):
         raise NotImplementedError('you missed your chance to initialise ' +
                 'and register events')
 
+    def send_to_input(self, input_string):
+        """Send something to the main plugin for processing as input.
+
+        Positional arguments:
+        input_string -- the string to process
+        """
+        self.get_main().process_input(input_string)
+
     def communicate(self, message, type):
         """Communicate something to the user.
 

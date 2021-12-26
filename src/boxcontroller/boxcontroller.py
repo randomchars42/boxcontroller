@@ -15,11 +15,11 @@ from pathlib import Path
 from .log import log
 from . import config as cfg
 from . import eventmap as evt
-from . import publisher
+from .eventapi import EventAPI
 
 logger = logging.getLogger(__name__)
 
-class BoxController(publisher.Publisher):
+class BoxController(EventAPI):
     def __init__(self, config):
         self._plugins = {}
         self._config = config
@@ -36,7 +36,7 @@ class BoxController(publisher.Publisher):
                 config.get('Paths', 'user_config'),
                 config.get('Paths', 'eventmap'))
 
-        self.setup(path_eventmap, self._path_plugins_user)
+        self.setup(Path(config.get('Paths', 'user_config')))
 
         self._event_map = evt.EventMap(config)
         self.load_plugins()
@@ -46,7 +46,11 @@ class BoxController(publisher.Publisher):
         """Make sure paths to config, plugins etc. are accessible."""
         logger.debug('checking paths')
         for path in args:
-            target = path.parent.expanduser().resolve()
+            target = path.expanduser().resolve()
+
+            if not target.is_dir():
+                target = target.parent
+
             if target.exists():
                 logger.debug('path "{}" exists'.format(str(target)))
             else:
@@ -178,7 +182,7 @@ class BoxController(publisher.Publisher):
             process.start()
         logger.debug('started all process plugins')
         while True:
-            logger.debug('awaiting signals')
+            logger.debug('waiting for signals')
             input_string = self.__from_plugins.get()
             self.process_input(input_string)
         self.stop()
