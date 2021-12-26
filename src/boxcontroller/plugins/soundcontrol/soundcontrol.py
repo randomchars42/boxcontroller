@@ -42,7 +42,9 @@ class Soundcontrol(ListenerPlugin):
             except OSError:
                 logger.debug('could not open file {}'.format(
                     self.get_path_max_volume()))
-                self.__max_volume = 100
+                self.__max_volume = self.get_config().get(
+                        'Soundcontrol', 'max_volume',
+                        default=100, variable_type="int")
 
         logger.debug('max volume is: {}'.format(str(self.__max_volume)))
         return self.__max_volume
@@ -98,6 +100,8 @@ class Soundcontrol(ListenerPlugin):
             raw[4])
         if not result is None:
             return int(result.groupdict()['volume'])
+        else:
+            return self.get_max_volume()
 
     def change_volume(self, direction=None, step=None):
         if not direction in ['+', '-']:
