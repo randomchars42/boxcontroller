@@ -54,6 +54,7 @@ class Soundcontrol(ListenerPlugin):
 
     def set_max_volume(self, volume):
         logger.debug('setting max volume to {}'.format(str(volume)))
+        volume = int(volume)
         self.__max_volume = volume
         self.get_path_max_volume().write_text(str(volume))
         if self.get_volume() > volume:
