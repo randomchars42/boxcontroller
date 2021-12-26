@@ -77,7 +77,7 @@ class EventAPI:
         """Return a dict holding busy bees which may inhibit idle time."""
         try:
             return self.__busy_bees
-        except ValueError:
+        except AttributeError:
             self.__busy_bees = {}
             return self.__busy_bees
 
