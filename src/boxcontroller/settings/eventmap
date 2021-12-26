@@ -5,7 +5,9 @@ GPIO_12_P|toggle
 pause|pause
 stop|stop
 GPIO_25_P|next
-GPIO_13_P|volume|direction=-
-GPIO_24_P|volume|direction=+
+GPIO_13_P|vol_step|direction=-
+GPIO_24_P|vol_step|direction=+
+0372441754|max_vol|60
+0203408243|max_vol|40
 0201980579|mpd_play|key=Namika.m3u
 0225023699|mpd_play|key=Mark Knopfler Test.m3u
