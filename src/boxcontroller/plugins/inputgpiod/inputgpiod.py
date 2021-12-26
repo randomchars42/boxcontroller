@@ -40,10 +40,10 @@ class Inputgpiod(ProcessPlugin):
 
     def run(self):
         monitor = GPIODMonitor(self.__chip)
-        for pin in self.__pins:
-            monitor.register(pin,
-                on_pressed = lambda: self.on_pressed(pin),
-                on_released = lambda: self.on_released(pin))
+        for gpio_pin in self.__pins:
+            monitor.register(gpio_pin,
+                on_pressed = lambda pin: self.on_pressed(pin),
+                on_released = lambda pin: self.on_released(pin))
         logger.debug('listening to pins')
         monitor.run()
 
