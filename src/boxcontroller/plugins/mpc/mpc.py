@@ -294,7 +294,7 @@ class Mpc(ListenerPlugin):
         self.register('toggle', lambda: self.simple_command('toggle'), True)
         self.register('stop', lambda: self.simple_command('stop'), True)
         self.register('next', lambda: self.simple_command('next'), True)
-        self.register('previous', lambda: self.simple_command('previous'), True)
+        self.register('previous', lambda: self.simple_command('prev'), True)
         #self.register('volume', self.volume)
 
         status = self.query_mpd_status()
