@@ -205,12 +205,41 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        '-o', '--options',
+        help='arbitrary configuration(s) as could be found in the ini-file \n' +
+            'formatted like SECTION1.option1=val1@@' +
+            'SECTION2.option4=val2@@... \n' +
+            'e.g., Soundcontrol.max_volume=60@@' +
+            'InputUSBRFID.device=/dev/event0 \n' +
+            '"@@" serves as a separator',
+        action='store',
+        default='',
+        type=str)
+    parser.add_argument(
+        '-d', '--user_config',
+        help='the directory where your config.ini, eventmap, etc. is stored',
+        action='store',
+        type=str,
+        default="")
+    parser.add_argument(
         '-v', '--verbosity',
         help='increase verbosity',
         action='count',
         default=0)
 
     args = parser.parse_args()
+
+    if not args.options == '':
+        for option in args.options.split('@@'):
+            try:
+                section, rest = option.split('.', 1)
+                option, value = rest.split('=', 1)
+                cfg.set(section, option, value)
+            except:
+                logger.error('did not understand option "{}"'.format(option))
+
+    if not args.working_dir == '':
+        cfg.set('Paths', 'user_config', args.user_config)
 
     verbosity = ['ERROR', 'WARNING', 'INFO', 'DEBUG']
     log.config['handlers']['console']['level'] = verbosity[args.verbosity]
@@ -220,18 +249,6 @@ def main():
     logging.config.dictConfig(log.config)
 
     boxcontroller = BoxController(config)
-    #boxcontroller.process_input('yourself')
-    #boxcontroller.process_input('joke')
-    #boxcontroller.define_event('3213', 'play', file='v.mp3', param='value')
-    #boxcontroller.process_input('toggle')
-    #boxcontroller.process_input('volume_inc')
-    #boxcontroller.process_input('volume_inc')
-    #boxcontroller.process_input('volume_inc')
-    #import time
-    #time.sleep(3)
-    #boxcontroller.process_input('volume_dec')
-    #boxcontroller.process_input('volume_dec')
-    #boxcontroller.process_input('volume_dec')
     boxcontroller.run()
 
 def signal_handler(signal_num, frame):
