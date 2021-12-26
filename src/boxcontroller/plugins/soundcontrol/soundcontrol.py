@@ -56,6 +56,8 @@ class Soundcontrol(ListenerPlugin):
         logger.debug('setting max volume to {}'.format(str(volume)))
         self.__max_volume = volume
         self.get_path_max_volume().write_text(str(volume))
+        if self.get_volume() > volume:
+            self.change_volume(abs=volume)
 
     def get_path_max_volume(self):
         return self.__path_max_volume
@@ -103,28 +105,44 @@ class Soundcontrol(ListenerPlugin):
         else:
             return self.get_max_volume()
 
-    def change_volume(self, direction=None, step=None):
-        if not direction in ['+', '-']:
-            logger.error('no such direction "{}"'.format(direction))
-            return
-
-        if step is None:
-            step = self.get_step()
-        step = int(step)
-
-        logger.debug('changing volume: {}%{}'.format(step, direction))
-
+    def change_volume(self, abs=None, direction=None, step=None):
         max = self.get_max_volume()
-        vol = self.query_volume()
-
-        if vol >= max or (direction == '+' and vol + step >= max):
-            logger.debug('max volume reached ({}%)'.format(str(max)))
-            result = self.amixer('set', 'Master', '{}%'.format(str(max)))
-        elif direction == '-' and vol - step <= 0:
-            logger.debug('min volume reached')
-            result = self.amixer('set', 'Master', '{}%'.format(str(0)))
+        if not abs is None:
+            # set volume to X %
+            abs = int(abs)
+            if abs >= max:
+                logger.debug('max volume reached ({}%)'.format(str(max)))
+                result = self.amixer('set', 'Master', '{}%'.format(str(max)))
+            elif abs <= 0:
+                logger.debug('min volume reached')
+                result = self.amixer('set', 'Master', '{}%'.format(str(0)))
+            else:
+                logger.debgu('setting volume to {}'.format(str(abs)))
+                result = self.amixer('set', 'Master', '{}%'.format(str(abs)))
         else:
-            result = self.amixer('set', 'Master', '{}%{}'.format(step, direction))
+            # increase / decrease volume in steps of X %
+            if not direction in ['+', '-']:
+                logger.error('no such direction "{}"'.format(direction))
+                return
+
+            if step is None:
+                step = self.get_step()
+            step = int(step)
+
+            #logger.debug('changing volume: {}%{}'.format(step, direction))
+
+            vol = self.query_volume()
+
+            if vol >= max or (direction == '+' and vol + step >= max):
+                logger.debug('max volume reached ({}%)'.format(str(max)))
+                result = self.amixer('set', 'Master', '{}%'.format(str(max)))
+            elif direction == '-' and vol - step <= 0:
+                logger.debug('min volume reached')
+                result = self.amixer('set', 'Master', '{}%'.format(str(0)))
+            else:
+                logger.debgu('{}{} %'.format(str(direction), str(step)))
+                result = self.amixer('set', 'Master', '{}%{}'.format(str(step),
+                    str(direction)))
 
         if result is None:
             logger.error('could not change volume')
