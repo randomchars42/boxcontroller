@@ -25,7 +25,7 @@ class Soundcontrol(ListenerPlugin):
                     default='max_volume')).expanduser().resolve()
         logger.debug('current volume: {}'.format(str(self.query_volume())))
         logger.debug('max volume: {}'.format(str(self.get_max_volume())))
-        self.set_max_volume(50)
+        self.set_max_volume(80)
         self.change_volume(step='60', direction='+')
 
     def get_volume(self):
@@ -137,7 +137,7 @@ class Soundcontrol(ListenerPlugin):
             if direction == '-' and vol - step <= 0:
                 logger.debug('min volume reached')
                 result = self.amixer('set', 'Master', '{}%'.format(str(0)))
-            elif vol >= max or (direction == '+' and vol + step >= max):
+            elif direction == '+' and vol + step >= max:
                 logger.debug('max volume reached ({}%)'.format(str(max)))
                 result = self.amixer('set', 'Master', '{}%'.format(str(max)))
             else:
