@@ -134,12 +134,12 @@ class Soundcontrol(ListenerPlugin):
 
             vol = self.query_volume()
 
-            if vol >= max or (direction == '+' and vol + step >= max):
-                logger.debug('max volume reached ({}%)'.format(str(max)))
-                result = self.amixer('set', 'Master', '{}%'.format(str(max)))
-            elif direction == '-' and vol - step <= 0:
+            if direction == '-' and vol - step <= 0:
                 logger.debug('min volume reached')
                 result = self.amixer('set', 'Master', '{}%'.format(str(0)))
+            elif vol >= max or (direction == '+' and vol + step >= max):
+                logger.debug('max volume reached ({}%)'.format(str(max)))
+                result = self.amixer('set', 'Master', '{}%'.format(str(max)))
             else:
                 logger.debgu('{}{} %'.format(str(direction), str(step)))
                 result = self.amixer('set', 'Master', '{}%{}'.format(str(step),
