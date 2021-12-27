@@ -141,7 +141,7 @@ class Soundcontrol(ListenerPlugin):
                 logger.debug('max volume reached ({}%)'.format(str(max)))
                 result = self.amixer('set', 'Master', '{}%'.format(str(max)))
             else:
-                logger.debgu('{}{} %'.format(str(direction), str(step)))
+                logger.debug('{}{} %'.format(str(direction), str(step)))
                 result = self.amixer('set', 'Master', '{}%{}'.format(str(step),
                     str(direction)))
 
