@@ -98,13 +98,17 @@ class Soundcontrol(ListenerPlugin):
 
     def query_volume(self):
         raw = self.amixer('get', 'Master').split('\n')
+        # if Master is stereo this will only capture the left line and we infer
+        # that this also holds true for the right line
         result = re.match(re.compile(
-            '\s+[a-zA-Z:]+\s+Playback\s+[0-9]+\s*\[(?P<volume>[0-9]+)%\]'),
-            raw[4])
+            '\s+[a-zA-Z :]+\s+[0-9]+\s*\[(?P<volume>[0-9]+)%\]'),
+            raw[5])
         if not result is None:
-            return int(result.groupdict()['volume'])
+            vol = int(result.groupdict()['volume'])
         else:
-            return self.get_max_volume()
+            vol = self.get_max_volume()
+        logger.debug('current volume: {}'.format(vol))
+        return vol
 
     def change_volume(self, abs=None, direction=None, step=None):
         max = self.get_max_volume()
@@ -129,8 +133,6 @@ class Soundcontrol(ListenerPlugin):
             if step is None:
                 step = self.get_step()
             step = int(step)
-
-            #logger.debug('changing volume: {}%{}'.format(step, direction))
 
             vol = self.query_volume()
 
