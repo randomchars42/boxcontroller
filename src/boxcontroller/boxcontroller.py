@@ -209,7 +209,7 @@ class BoxController(EventAPI):
         self.stop()
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')
-        os.system('shutdown -p {}'.format(str(time)))
+        os.system('shutdown -P {}'.format(str(time)))
 
 
 
