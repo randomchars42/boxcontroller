@@ -16,7 +16,7 @@ class Onoffshim(ProcessPlugin):
 
     def __init__(self, *args, **kwargs):
         ProcessPlugin.__init__(self, *args, **kwargs)
-        self.__chip = kwargs['main'].get_config().get('InputGPIOD',
+        self.__chip = kwargs['main'].get_config().get('OnOffShim',
                 'chip', default=None, variable_type='int')
         self.__pin_shutdown = kwargs['main'].get_config().get('OnOffShim',
                 'pin', default=4, variable_type='int')
