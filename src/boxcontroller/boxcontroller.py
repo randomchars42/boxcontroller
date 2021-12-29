@@ -26,6 +26,7 @@ class BoxController(EventAPI):
         self.__processes = {}
         self.__to_plugins = multiprocessing.JoinableQueue()
         self.__from_plugins = multiprocessing.Queue()
+        self.__stop_signal = False
 
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
             'plugins'))
@@ -40,7 +41,11 @@ class BoxController(EventAPI):
 
         self._event_map = evt.EventMap(config)
         self.load_plugins()
+        self.register('shutdown', 'main', callback=self.shutdown)
         self.load_event_map()
+
+    def get_stop_signal(self):
+        return self.__stop_signal
 
     def setup(self, *args):
         """Make sure paths to config, plugins etc. are accessible."""
@@ -182,18 +187,28 @@ class BoxController(EventAPI):
             logger.debug('starting process "{}"'.format(name))
             process.start()
         logger.debug('started all process plugins')
-        while True:
+        while not self.get_stop_signal():
             logger.debug('waiting for signals')
             input_string = self.__from_plugins.get()
             self.process_input(input_string)
-        self.stop()
-
-    def stop(self):
-        """Stop all ProcessPlugins."""
+        # stop all process plugins
         for name, process in self.get_processes().items():
             logger.debug('terminating process "{}"'.format(name))
             process.terminate()
             process.join()
+
+    def stop(self):
+        """Stop all ProcessPlugins."""
+        self.__stop_signal = True
+
+    def shutdown(self):
+        """"""
+        logger.debug('beginning shutdown routine')
+        # wait for all processes to stop
+        self.stop()
+        time = self.get_config('System', 'shutdown_time')
+        os.system('shutdown -p {}'.format(time))
+
 
 
 def main():

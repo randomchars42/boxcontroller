@@ -9,5 +9,3 @@ GPIO_13_P|vol_step|direction=-
 GPIO_24_P|vol_step|direction=+
 0372441754|vol_max|60
 0203408243|vol_max|40
-0201980579|mpd_play|key=Namika.m3u
-0225023699|mpd_play|key=Mark Knopfler Test.m3u
