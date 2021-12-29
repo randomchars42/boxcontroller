@@ -21,6 +21,7 @@ class EventAPI:
         except (NameError, AttributeError) as e:
             # dict has not yet been defined
             self._events = {}
+            return self._events
 
     def register_listener(self, event, who, callback=None, exclusive=False):
         """Register listeners, one per name, might register as exclusive.
