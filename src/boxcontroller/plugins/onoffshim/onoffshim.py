@@ -55,7 +55,7 @@ class Onoffshim(ProcessPlugin):
 
     def run(self):
         monitor = GPIODMonitor(self.get_chip())
-        monitor.register(self.get_pin('listen')(),
+        monitor.register(self.get_pin('listen'),
             on_pressed = lambda pin: self.on_pressed(pin),
             on_released = lambda pin: self.on_released(pin))
         logger.debug('listening to shutdown pin')
