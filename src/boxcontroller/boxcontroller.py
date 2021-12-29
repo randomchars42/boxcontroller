@@ -40,8 +40,8 @@ class BoxController(EventAPI):
         self.setup(Path(config.get('Paths', 'user_config')))
 
         self._event_map = evt.EventMap(config)
-        self.load_plugins()
         self.register_listener('shutdown', 'main', callback=self.shutdown)
+        self.load_plugins()
         self.load_event_map()
 
     def get_stop_signal(self):
