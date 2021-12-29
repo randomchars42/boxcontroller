@@ -18,6 +18,7 @@ class Onoffshim(ProcessPlugin):
         ProcessPlugin.__init__(self, *args, **kwargs)
         self.__chip = kwargs['main'].get_config().get('OnOffShim',
                 'chip', default=None, variable_type='int')
+        self.__pin = {}
         self.__pin['shutdown'] = kwargs['main'].get_config().get('OnOffShim',
                 'pin_shutdown', default=4, variable_type='int')
         self.__pin['listen'] = kwargs['main'].get_config().get('OnOffShim',
