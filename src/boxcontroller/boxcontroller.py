@@ -206,8 +206,9 @@ class BoxController(EventAPI):
         logger.debug('beginning shutdown routine')
         # wait for all processes to stop
         self.stop()
-        time = self.get_config('System', 'shutdown_time')
-        os.system('shutdown -p {}'.format(time))
+        time = self.get_config().get('System', 'shutdown_time',
+                default=1, variable_type='int')
+        os.system('shutdown -p {}'.format(str(time)))
 
 
 
