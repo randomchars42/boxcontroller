@@ -24,7 +24,7 @@ class Onoffshim(ProcessPlugin):
         self.__pin['listen'] = kwargs['main'].get_config().get('OnOffShim',
                 'pin_listen', default=17, variable_type='int')
         self.__time_pressed = 0
-        if self.__chip is None or self.__pin_listen is None:
+        if self.__chip is None or len(self.__pin) < 2:
             logger.error('No chip or pins defined')
             return
 
