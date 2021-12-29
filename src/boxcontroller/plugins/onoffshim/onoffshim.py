@@ -19,7 +19,7 @@ class Onoffshim(ProcessPlugin):
         self.__chip = kwargs['main'].get_config().get('InputGPIOD',
                 'chip', default=None, variable_type='int')
         self.__pin_shutdown = kwargs['main'].get_config().get('OnOffShim',
-                'pin', default=None)
+                'pin', default=4, variable_type='int')
         self.__time_pressed = 0
         if self.__chip is None or self.__pin_shutdown is None:
             logger.error('No chip or pins defined')
