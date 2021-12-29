@@ -25,8 +25,6 @@ class Soundcontrol(ListenerPlugin):
                     default='max_volume')).expanduser().resolve()
         logger.debug('current volume: {}'.format(str(self.query_volume())))
         logger.debug('max volume: {}'.format(str(self.get_max_volume())))
-        self.set_max_volume(80)
-        self.change_volume(step='60', direction='+')
 
     def get_volume(self):
         return self.__volume
