@@ -44,13 +44,13 @@ class Onoffshim(ProcessPlugin):
         logger.debug('GPIO {} held for {} seconds'.format(pin, diff))
         if diff > 1:
             logger.debug('triggering shutdown')
-            logger.debug('pulling down shutdown pin')
-            # pull down the pin so the button can trigger next boot
-            with gpiod.Chip('gpiochip{}'.format(str(self.get_chip()))) as chip:
-                lines = chip.get_lines([self.get_pin('shutdown')])
-                lines.request(consumer='boxcontroller.plugins.onoffshim',
-                        type=gpiod.LINE_REQ_DIR_OUT)
-                lines.set_values([0])
+            #logger.debug('pulling down shutdown pin')
+            ## pull down the pin so the button can trigger next boot
+            #with gpiod.Chip('gpiochip{}'.format(str(self.get_chip()))) as chip:
+            #    lines = chip.get_lines([self.get_pin('shutdown')])
+            #    lines.request(consumer='boxcontroller.plugins.onoffshim',
+            #            type=gpiod.LINE_REQ_DIR_OUT)
+            #    lines.set_values([0])
             self.queue_put('shutdown')
 
     def run(self):
