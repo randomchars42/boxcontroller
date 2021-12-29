@@ -18,7 +18,7 @@ class EventAPI:
     def get_events(self):
         try:
             return self._events
-        except NameError, AttributeError as e:
+        except (NameError, AttributeError) as e:
             # dict has not yet been defined
             self._events = {}
 
