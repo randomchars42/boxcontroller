@@ -10,8 +10,33 @@ from boxcontroller.processplugin import ProcessPlugin
 logger = logging.getLogger('boxcontroller.plugin.' + __name__)
 
 class Onoffshim(ProcessPlugin):
-    """Plugin for waiting for GPIO input using libgpiod.
+    """Plugin for waiting for GPIO input and initiating shutdown.
 
+    Shutdown using the Pimoroni OnOffShim is a two step process:
+    - listening on a pin for a signal (default GPIO 17) and calling shutdown -P
+      if the button is pressed
+    - switching of the power supply to the raspberry pi by pulling down the
+      poweroff pin (GPIO 4)
+      this immediatly cuts the power supply so it cannot be done within this
+      script
+      put this into /usr/lib/systemd/system-shutdown/boxcontroller.shutdown:
+
+        #! /bin/sh
+        # https://newbedev.com/how-to-run-a-script-with-systemd-right-before-shutdown
+        # https://github.com/pimoroni/clean-shutdown/blob/master/daemon/lib/systemd/system-shutdown/gpio-poweroff
+        # $1 will be either "halt", "poweroff", "reboot" or "kexec"
+        poweroff_pin=4
+        case "$1" in
+            poweroff)
+                # with libgpiod2:
+                /bin/sleep 0.5
+                /bin/gpioset gpiochip0 $poweroff_pin=0
+                # without libgpiod2:
+                #/bin/echo $poweroff_pin > /sys/class/gpio/export
+                #/bin/echo out > /sys/class/gpio/gpio$poweroff_pin/direction
+                #/bin/echo 0 > /sys/class/gpio/gpio$poweroff_pin/value
+                #/bin/sleep 0.5
+                ;;
     """
 
     def __init__(self, *args, **kwargs):
@@ -44,13 +69,6 @@ class Onoffshim(ProcessPlugin):
         logger.debug('GPIO {} held for {} seconds'.format(pin, diff))
         if diff > 1:
             logger.debug('triggering shutdown')
-            #logger.debug('pulling down shutdown pin')
-            ## pull down the pin so the button can trigger next boot
-            #with gpiod.Chip('gpiochip{}'.format(str(self.get_chip()))) as chip:
-            #    lines = chip.get_lines([self.get_pin('shutdown')])
-            #    lines.request(consumer='boxcontroller.plugins.onoffshim',
-            #            type=gpiod.LINE_REQ_DIR_OUT)
-            #    lines.set_values([0])
             self.queue_put('shutdown')
 
     def run(self):
