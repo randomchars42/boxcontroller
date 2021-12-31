@@ -31,5 +31,5 @@ class Soundeffect(ListenerPlugin):
             logger.error('no such sound configured: "{}"'.format(str(sound)))
             return
         # check if an audio process has been created and has not returned yet
-        if not self._audio_current or not self._audio_current.poll() == None:
-            self._audio_current = subprocess.Popen(["/usr/bin/aplay", self._path_sounds / sound])
+        #if not self._audio_current or not self._audio_current.poll() == None:
+        self._audio_current = subprocess.Popen(["/usr/bin/aplay", "-N", self._path_sounds / sound])
