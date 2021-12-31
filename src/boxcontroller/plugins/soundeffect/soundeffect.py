@@ -2,6 +2,7 @@
 
 import pkg_resources
 import subprocess
+import sys
 from pathlib import Path
 import logging
 
@@ -17,7 +18,6 @@ class Soundeffect(ListenerPlugin):
 
     def on_init(self):
         # subprocess for playing sounds
-        self._audio_current = None
         self.register('finished_loading', lambda: self.play_sound('ready'))
         self.register('before_shutdown', lambda: self.play_sound('shutdown'))
         self.register('error', lambda: self.play_sound('error'))
@@ -30,6 +30,15 @@ class Soundeffect(ListenerPlugin):
         if sound is None:
             logger.error('no such sound configured: "{}"'.format(str(sound)))
             return
-        # check if an audio process has been created and has not returned yet
-        #if not self._audio_current or not self._audio_current.poll() == None:
-        self._audio_current = subprocess.Popen(["/usr/bin/aplay", "-N", self._path_sounds / sound])
+        call = ["/usr/bin/aplay", "-N", self._path_sounds / sound]
+        if sys.version_info[1] >= 7:
+            # capture output is new and in this case required with python >= 3.7
+            result = subprocess.run(call, capture_output=True,
+                    encoding="utf-8")
+        else:
+            result = subprocess.run(call, encoding="utf-8",
+                    stdout=subprocess.PIPE)
+
+        raw = result.stdout
+        if result.returncode != 0:
+            logger.error('could not play sound "{}"'.format(sound))
