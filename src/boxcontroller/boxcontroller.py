@@ -200,8 +200,9 @@ class BoxController(EventAPI):
             process.join()
 
     def stop(self):
-        """Stop all ProcessPlugins."""
+        """Stop all ProcessPlugins and ListenerPlugins."""
         self.__stop_signal = True
+        self.dispatch('stop')
 
     def shutdown(self):
         """"""
@@ -270,20 +271,24 @@ def main():
     logging.config.dictConfig(log.config)
 
     boxcontroller = BoxController(config)
+
+    signal.signal(signal.SIGINT, lambda signal_num, frame: signal_handler(
+        signal_num, frame, boxcontroller))
     boxcontroller.run()
 
-def signal_handler(signal_num, frame):
+def signal_handler(signal_num, frame, boxcontroller):
     """Log signal and call sys.exit(0).
 
     Positional arguments:
     signal_num -- unused
     frame -- unused
+    boxcontroller -- BoxController object to stop
     """
-    logger.error('recieved signal ' + str(signal_num))
+    logger.info('recieved signal ' + str(signal_num))
+    boxcontroller.stop()
     sys.exit(0)
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal_handler)
 
     try:
         main()
