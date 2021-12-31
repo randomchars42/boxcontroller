@@ -18,7 +18,6 @@ class Soundeffect(ListenerPlugin):
     def on_init(self):
         # subprocess for playing sounds
         self._audio_current = None
-        self.register('test', self.test)
         self.register('finished_loading', lambda: self.play_sound('ready'))
         self.register('before_shutdown', lambda: self.play_sound('shutdown'))
         self.register('error', lambda: self.play_sound('error'))
