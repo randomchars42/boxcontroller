@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import subprocess
+import threading
+import time
 import logging
 import sys
 import re
-import hashlib
+#import hashlib
 
 from boxcontroller.listenerplugin import ListenerPlugin
 from . import statusmap
@@ -22,9 +24,21 @@ class Mpc(ListenerPlugin):
         # exclusive input from these signals it will register with its
         # play-function and unregister our other listeners (toggle, next, ...)
         self.register('mpd_play', self.play, True)
+        self.register('stop', self.on_stop)
 
         # this plugin may inhibit shutdown etc. if it marks itself as busy
         self.register_as_busy_bee()
+
+        # a lock to prevent the main thread and the watching thread to update
+        # the status simultaneously
+        self.lock = threading.Lock()
+        self.stop_event = threading.Event()
+        # a chronicler to watch and record MPD's status
+        interval = self.get_config().get('MPC', 'polling_interval', default=5,
+                variable_type='int')
+        self.chronicler = threading.Thread(target=self.watch_status,
+                args=(self.stop_event,interval,))
+        self.chronicler.start()
 
         logger.debug('checking if mpd is already playing')
         if not self.check_status():
@@ -40,6 +54,10 @@ class Mpc(ListenerPlugin):
             self.update_status()
             # be busy
             self.mark_as_busy(True)
+
+    def on_stop(self):
+        self.stop_event.set()
+        self.chronicler.join()
 
     def get_statusmap(self):
         return self.__statusmap
@@ -269,8 +287,8 @@ class Mpc(ListenerPlugin):
             # to figure it out because MPD does not store if it's playing a
             # a playlist or the contents of one or multiple folders
             logger.debug('no current key')
-            self.communicate('Don\'t know what to do. Please, load a playlist.',
-                    'error')
+            #self.communicate('Don\'t know what to do. Please, load a playlist.',
+            #        'error')
             return False
         logger.debug('current key: "{}"'.format(key))
 
@@ -279,8 +297,8 @@ class Mpc(ListenerPlugin):
             # at the statusmap
             # maybe someone has changed it from the outside (e.g., another mpd
             # client) in the meantime
-            self.communicate('Don\'t know what to do. Please, load a playlist.',
-                    'error')
+            #self.communicate('Don\'t know what to do. Please, load a playlist.',
+            #        'error')
             logger.debug('not in expected playlist')
             return False
         logger.debug('loaded playlist is expected playlist')
@@ -289,7 +307,9 @@ class Mpc(ListenerPlugin):
     def update_status(self):
         """Update status in statusmap."""
         logger.debug('updating status')
+        self.lock.acquire()
         if not self.check_status():
+            self.lock.release()
             return
         status = self.query_mpd_status()
 
@@ -306,8 +326,20 @@ class Mpc(ListenerPlugin):
         key = self.get_current_key()
         if key is None:
             logger.debug('cancel status update, no current key')
+            self.lock.release()
             return
         self.set_status(key, soft=False, **status)
+        self.lock.release()
+
+    def watch_status(self, stop_event, interval):
+        """Poll MPD's status every INTERVAL seconds.
+
+        Positional arguments:
+        stop_event -- stops the thread if set [threading.Event]
+        interval -- interval between polls in seconds [int]
+        """
+        while not stop_event.wait(interval):
+            self.update_status()
 
     def seize_control(self):
         """Seize control of control buttons' events."""
@@ -319,6 +351,11 @@ class Mpc(ListenerPlugin):
         #self.register('volume', self.volume)
 
     def play(self, *args, **kwargs):
+        """Play the contents of the playlist / folder defined by KEY.
+
+        Keyword arguments:
+        key -- the key as used in EventMap and StatusMap [string]
+        """
         logger.debug('play: {}'.format(kwargs['key']))
 
         # seize control!
@@ -348,8 +385,13 @@ class Mpc(ListenerPlugin):
             self.debug('error loading status: {}'.format(','.join(
                 ['{},{}'.format(kw,v) for kw,v in kwargs.items()])))
             self.communicate('Could not load playlist.')
+            return
         self.set_current_key(kwargs['key'])
         self.update_status()
+
+        # mpd is now playing the desired list
+        # watch it and store it's progresse every X seconds
+        #self.chronicler.start()
 
     def simple_command(self, do):
         """Wrapper around the more simple functions (toggle, stop, etc.)."""
