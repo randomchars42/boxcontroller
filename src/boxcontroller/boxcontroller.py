@@ -149,6 +149,7 @@ class BoxController(EventAPI):
             event, data = self._event_map.get(string)
             logger.debug('event "{}" mapped to input "{}"'.format(event, string))
         except KeyError:
+            self.dispatch('error')
             logger.info('no event mapped to input "{}"'.format(string))
             return
 
@@ -188,6 +189,7 @@ class BoxController(EventAPI):
             logger.debug('starting process "{}"'.format(name))
             process.start()
         logger.debug('started all process plugins')
+        self.dispatch('finished_loading')
         while not self.get_stop_signal():
             logger.debug('waiting for signals')
             input_string = self.__from_plugins.get()
@@ -207,6 +209,9 @@ class BoxController(EventAPI):
         logger.debug('beginning shutdown routine')
         # wait for all processes to stop
         self.stop()
+
+        self.dispatch('before_shutdown')
+
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')
         os.system('shutdown -P {}'.format(str(time)))
