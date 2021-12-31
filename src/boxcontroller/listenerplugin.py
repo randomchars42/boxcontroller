@@ -90,4 +90,4 @@ class ListenerPlugin(plugin.Plugin):
         message --  the message to relay [string]
         type -- type of message ("error"|"info") [string]
         """
-        logger.info('{}: {}'.format(type, message))
+        self.get_main().communicate(message, type)

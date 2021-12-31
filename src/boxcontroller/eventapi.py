@@ -103,3 +103,17 @@ class EventAPI:
         """
         self.get_busy_bees()[name] = busy
         self.am_i_idle()
+
+    def communicate(self, message, type):
+        """Communicate something to the user.
+
+        Boxcontroller will choose appropriate means (playing a sound,
+        displaying a message, ...)
+
+        Positional arguments:
+        message --  the message to relay [string]
+        type -- type of message ("error"|"info") [string]
+        """
+        logger.info('{}: {}'.format(type, message))
+        if type == 'error':
+            self.dispatch('error')

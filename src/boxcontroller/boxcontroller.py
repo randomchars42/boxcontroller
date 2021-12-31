@@ -149,7 +149,6 @@ class BoxController(EventAPI):
             event, data = self._event_map.get(string)
             logger.debug('event "{}" mapped to input "{}"'.format(event, string))
         except KeyError:
-            self.dispatch('error')
             logger.info('no event mapped to input "{}"'.format(string))
             return
 
