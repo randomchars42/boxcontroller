@@ -48,7 +48,6 @@ class Onoffshim(ProcessPlugin):
                 'pin_shutdown', default=4, variable_type='int')
         self.__pin['listen'] = kwargs['main'].get_config().get('OnOffShim',
                 'pin_listen', default=17, variable_type='int')
-        self.__time_pressed = 0
         if self.__chip is None or len(self.__pin) < 2:
             logger.error('No chip or pins defined')
             return
@@ -60,22 +59,14 @@ class Onoffshim(ProcessPlugin):
         return self.__pin[type]
 
     def on_pressed(self, pin):
-        logger.debug('GPIO {} pressed'.format(pin))
-        self.__time_pressed = time.time()
-
-    def on_released(self, pin):
-        logger.debug('GPIO {} released'.format(pin))
-        diff = int(time.time() - self.__time_pressed)
-        logger.debug('GPIO {} held for {} seconds'.format(pin, diff))
-        if diff > 1:
-            logger.debug('triggering shutdown')
-            self.queue_put('shutdown')
+        logger.debug('shutdown pin pressed'.format(pin))
+        self.queue_put('shutdown')
 
     def run(self):
         monitor = GPIODMonitor(self.get_chip())
-        monitor.register(self.get_pin('listen'),
-            on_pressed = lambda pin: self.on_pressed(pin),
-            on_released = lambda pin: self.on_released(pin))
+        monitor.register_long_press(self.get_pin('listen'),
+            self.on_pressed,
+            3)
         logger.debug('listening to shutdown pin')
         monitor.run()
 
