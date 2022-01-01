@@ -86,7 +86,7 @@ class BoxController(EventAPI):
         self._plugins['main'] = self
         self._load_plugins(self._path_plugins)
         self._load_plugins(self._path_plugins_user.expanduser().resolve())
-        self.dispatch('init')
+        self._dispatch('init')
 
     def _load_plugins(self, path):
         """Gather all packages under path as plugins.
@@ -136,24 +136,6 @@ class BoxController(EventAPI):
         """Return a reference to the config."""
         return self._config
 
-    def process_input(self, string):
-        """The main way to process input from peripherals.
-
-        The input is used as a key to look up which event to trigger.
-
-        Positional arguments:
-        string - the input to map to an event [string]
-        """
-        logger.debug('recieved input: "{}"'.format(string))
-        try:
-            event, data = self._event_map.get(string)
-            logger.debug('event "{}" mapped to input "{}"'.format(event, string))
-        except KeyError:
-            logger.info('no event mapped to input "{}"'.format(string))
-            return
-
-        self.dispatch(event, *data['positional'], **data['keyword'])
-
     def define_event(self, key, event, *args, **kwargs):
         """Update, add or delete the mapping of an event.
 
@@ -188,7 +170,7 @@ class BoxController(EventAPI):
             logger.debug('starting process "{}"'.format(name))
             process.start()
         logger.debug('started all process plugins')
-        self.dispatch('finished_loading')
+        self._dispatch('finished_loading')
         self.am_i_idle()
         while not self.get_stop_signal():
             logger.debug('waiting for signals')
@@ -203,7 +185,7 @@ class BoxController(EventAPI):
     def stop(self):
         """Stop all ProcessPlugins and ListenerPlugins."""
         self.__stop_signal = True
-        self.dispatch('stop')
+        self._dispatch('stop')
 
     def shutdown(self):
         """"""
@@ -211,7 +193,7 @@ class BoxController(EventAPI):
         # wait for all processes to stop
         self.stop()
 
-        self.dispatch('before_shutdown')
+        self._dispatch('before_shutdown')
 
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')

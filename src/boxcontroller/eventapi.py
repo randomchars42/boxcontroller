@@ -8,6 +8,11 @@ class EventAPI:
     """Interface for plugins communication synchronously."""
 
     def get_subscribers(self, event):
+        """Return a dictionary of subscribers to an event.
+
+        Positional arguments:
+        event -- the event to get the subcribers for [string]
+        """
         try:
             return self.get_events()[event]
         except KeyError:
@@ -16,6 +21,7 @@ class EventAPI:
         return self.get_subscribers(event)
 
     def get_events(self):
+        """Return a dictionary of events."""
         try:
             return self._events
         except (NameError, AttributeError) as e:
@@ -49,10 +55,25 @@ class EventAPI:
             logger.debug('"{}" registered for event "{}"'.format(who, event))
 
     def unregister(self, event, who):
+        """Unregister a listener for the event.
+
+        Positional arguments:
+        event -- the event to unregister from [string]
+        who -- name of the plugin to unregister [string]
+        """
         del self.get_subscribers(event)[who]
         logger.debug('"{}" unregistered for event "{}"'.format(who, event))
 
-    def dispatch(self, event, *args, **kwargs):
+    def _dispatch(self, event, *args, **kwargs):
+        """Dispatch event.
+
+        Positional arguments:
+        event -- the event to be dispatched [string]
+        * -- parameters to pass with the event
+
+        Keyword arguments:
+        * -- parameters to pass with the event
+        """
         if len(self.get_subscribers(event)) == 0:
             logger.debug('trying to dispatch "{}", no one\'s listening'.format(
                 event))
@@ -87,10 +108,10 @@ class EventAPI:
         logger.debug('am I idle?')
         if not True in self.get_busy_bees().values():
             logger.debug('I am idle.')
-            self.dispatch('idle')
+            self._dispatch('idle')
         else:
             logger.debug('someone\'s busy.')
-            self.dispatch('busy')
+            self._dispatch('busy')
 
     def mark_busy_bee_as_busy(self, name, busy):
         """Mark a plugin as busy or idle.
@@ -116,4 +137,34 @@ class EventAPI:
         """
         logger.info('{}: {}'.format(type, message))
         if type == 'error':
-            self.dispatch('error')
+            self._dispatch('error')
+
+    def request_event(self, event, *args, **kwargs):
+        """Request an event to be dispatched.
+
+        Positional arguments:
+        event -- the event to be dispatched [string]
+        * -- parameters to pass with the event
+
+        Keyword arguments:
+        * -- parameters to pass with the event
+        """
+        self._dispatch(event, *args, **kwargs)
+
+    def process_input(self, string):
+        """The main way to process input from peripherals.
+
+        The input is used as a key to look up which event to trigger.
+
+        Positional arguments:
+        string - the input to map to an event [string]
+        """
+        logger.debug('recieved input: "{}"'.format(string))
+        try:
+            event, data = self._event_map.get(string)
+            logger.debug('event "{}" mapped to input "{}"'.format(event, string))
+        except KeyError:
+            logger.info('no event mapped to input "{}"'.format(string))
+            return
+
+        self._dispatch(event, *data['positional'], **data['keyword'])

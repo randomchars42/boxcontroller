@@ -55,14 +55,6 @@ class ListenerPlugin(plugin.Plugin):
         raise NotImplementedError('you missed your chance to initialise ' +
                 'and register events')
 
-    def send_to_input(self, input_string):
-        """Send something to the main plugin for processing as input.
-
-        Positional arguments:
-        input_string -- the string to process
-        """
-        self.get_main().process_input(input_string)
-
     def register_as_busy_bee(self):
         """Mark this plugin as a busy bee potentially inhibitting shutdown, etc.
         """
@@ -91,3 +83,23 @@ class ListenerPlugin(plugin.Plugin):
         type -- type of message ("error"|"info") [string]
         """
         self.get_main().communicate(message, type)
+
+    def send_to_input(self, input_string):
+        """Send something to the main plugin for processing as input.
+
+        Positional arguments:
+        input_string -- the string to process
+        """
+        self.get_main().process_input(input_string)
+
+    def request_event(self, event, *args, **kwargs):
+        """Request an event to be dispatched.
+
+        Positional arguments:
+        event -- the event to be dispatched [string]
+        * -- parameters to pass with the event
+
+        Keyword arguments:
+        * -- parameters to pass with the event
+        """
+        self.get_main().request_event(event, *args, **kwargs)
