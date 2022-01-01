@@ -80,4 +80,4 @@ class Shutdowntimer(ListenerPlugin):
                 break
         logger.debug('stopped countdown')
         if shutdown:
-            print('shudtdown')
+            self.send_to_input('shutdown')
