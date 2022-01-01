@@ -56,6 +56,7 @@ class Mpc(ListenerPlugin):
             self.mark_as_busy(True)
 
     def on_stop(self):
+        """Send stop signal to thread watching MPD and wait for it to finish."""
         self.stop_event.set()
         self.chronicler.join()
 
