@@ -189,6 +189,7 @@ class BoxController(EventAPI):
             process.start()
         logger.debug('started all process plugins')
         self.dispatch('finished_loading')
+        self.am_i_idle()
         while not self.get_stop_signal():
             logger.debug('waiting for signals')
             input_string = self.__from_plugins.get()
