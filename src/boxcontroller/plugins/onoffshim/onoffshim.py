@@ -58,7 +58,7 @@ class Onoffshim(ProcessPlugin):
     def get_pin(self, type):
         return self.__pin[type]
 
-    def on_pressed(self, pin):
+    def on_pressed(self, pin, time):
         logger.debug('shutdown pin pressed'.format(pin))
         self.queue_put('shutdown')
 
@@ -69,5 +69,3 @@ class Onoffshim(ProcessPlugin):
             3)
         logger.debug('listening to shutdown pin')
         monitor.run()
-
-
