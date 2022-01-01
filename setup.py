@@ -62,7 +62,7 @@ setup(
         'setuptools',
     ],
     install_requires=[
-        'gpiodmonitor>=0.1.1',
+        'gpiodmonitor>=0.2.0',
         'evdev >= 1.4.0'
     ],
     entry_points={
