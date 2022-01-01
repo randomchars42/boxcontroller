@@ -34,16 +34,11 @@ class Inputgpiod(ProcessPlugin):
         logger.debug('GPIO {} pressed'.format(pin))
         self.queue_put('GPIO_{}_P'.format(str(pin)))
 
-    def on_released(self, pin):
-        logger.debug('GPIO {} released'.format(pin))
-        self.queue_put('GPIO_{}_R'.format(str(pin)))
-
     def run(self):
         monitor = GPIODMonitor(self.__chip)
         for gpio_pin in self.__pins:
             monitor.register(gpio_pin,
-                on_pressed = lambda pin: self.on_pressed(pin),
-                on_released = lambda pin: self.on_released(pin))
+                on_pressed=lambda pin,time: self.on_pressed(pin))
         logger.debug('listening to pins')
         monitor.run()
 
