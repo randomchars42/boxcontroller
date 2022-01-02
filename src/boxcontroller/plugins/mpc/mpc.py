@@ -249,18 +249,23 @@ class Mpc(ListenerPlugin):
         """Check if mpd's queue is the list we expect to be looking at."""
         logger.debug('comparing playlists')
 
-        if self.key_marks_playlist(self.get_current_key()):
+        current_key = self.get_current_key()
+        if current_key is None:
+            logger.debug('No current key set')
+            return False
+
+        if self.key_marks_playlist(current_key):
             # get the queue
             queue = self.mpc('playlist').strip()
             # get the contents of the playlist
             assumed_list = self.mpc('playlist',
-                    self.get_current_key()[:-4]).strip()
+                    current_key[:-4]).strip()
         else:
             # get the queue but show filenames
             queue = self.mpc('playlist', '-f', '%file%').strip()
             # find files in the specified folder
             assumed_list = self.mpc(
-                    'search', 'filename', self.get_current_key()).strip()
+                    'search', 'filename', current_key).strip()
 
         #print('Queue:')
         #print(queue)
