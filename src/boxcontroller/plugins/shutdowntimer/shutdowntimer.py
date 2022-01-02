@@ -77,6 +77,7 @@ class Shutdowntimer(ListenerPlugin):
                 logger.debug('shutdown timer expired')
                 shutdown = True
                 self.get_stop_event().set()
+                self.set_shutdown_time()
                 break
         logger.debug('stopped countdown')
         if shutdown:
