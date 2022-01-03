@@ -28,9 +28,10 @@ class BoxController(EventAPI):
         self.__to_plugins = multiprocessing.JoinableQueue()
         self.__from_plugins = multiprocessing.Queue()
         self.__stop_signal = False
+        self.__shutdown_flag = False
 
         self._path_plugins = Path(pkg_resources.resource_filename(__name__,
-            'plugins'))
+                'plugins'))
         self._path_plugins_user = Path(
                 config.get('Paths', 'user_config'),
                 config.get('Paths', 'plugins'))
@@ -47,6 +48,12 @@ class BoxController(EventAPI):
 
     def get_stop_signal(self):
         return self.__stop_signal
+
+    def get_shutdown_flag(self):
+        return self.__shutdown_flag
+
+    def set_shutdown_flag(self, set_to=True):
+        self.__shutdown_flag = set_to
 
     def setup(self, *args):
         """Make sure paths to config, plugins etc. are accessible."""
@@ -169,31 +176,54 @@ class BoxController(EventAPI):
         for name, process in self.get_processes().items():
             logger.debug('starting process "{}"'.format(name))
             process.start()
+
         logger.debug('started all process plugins')
         self._dispatch('finished_loading')
+
         self.am_i_idle()
+
         while not self.get_stop_signal():
             logger.debug('waiting for signals')
             input_string = self.__from_plugins.get()
             self.process_input(input_string)
+
+        # TODO: never reached on shutdown
+
         # stop all process plugins
         for name, process in self.get_processes().items():
             logger.debug('terminating process "{}"'.format(name))
             process.terminate()
             process.join()
 
+        if self.shutdown()
+
+
     def stop(self):
         """Stop all ProcessPlugins and ListenerPlugins."""
-        self.__stop_signal = True
+        # signal to all Plugins running in the main thread
         self._dispatch('stop')
+        # stop all ProcessPlugins with their processes
+        self.__stop_signal = True
 
-    def shutdown(self):
-        """"""
+    def on_shutdown(self):
+        """Prepare for shutdown."""
         logger.debug('beginning shutdown routine')
         # wait for all processes to stop
         self.stop()
 
         self._dispatch('before_shutdown')
+        self.set_shutdown_flag(True)
+
+    def shutdown(self):
+        """Actual shutdown procedure called after all processes have stopped."""
+
+        if not self.get_shutdown_flag():
+            logger.debug('Shutdown flag not set.')
+            return
+
+        if not self.get_stop_signal():
+            logger.error('Processes have not been told to stop yet.')
+            return
 
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')
