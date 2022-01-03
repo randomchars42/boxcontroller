@@ -187,15 +187,13 @@ class BoxController(EventAPI):
             input_string = self.__from_plugins.get()
             self.process_input(input_string)
 
-        # TODO: never reached on shutdown
-
         # stop all process plugins
         for name, process in self.get_processes().items():
             logger.debug('terminating process "{}"'.format(name))
             process.terminate()
             process.join()
 
-        if self.shutdown()
+        self.shutdown()
 
 
     def stop(self):
