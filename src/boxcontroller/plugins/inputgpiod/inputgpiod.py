@@ -61,8 +61,8 @@ class Inputgpiod(ProcessPlugin):
                 on_pressed=lambda pin,time: self.on_pressed(pin))
         for gpio_pin in self.get_long_press_pins():
             monitor.register(gpio_pin,
-                lambda pin,time: self.on_pressed(pin),
-                self.get_long_press_duration)
+                lambda pin,time: self.on_long_pressed(pin),
+                self.get_long_press_duration())
         logger.debug('listening to pins')
         monitor.run()
 
