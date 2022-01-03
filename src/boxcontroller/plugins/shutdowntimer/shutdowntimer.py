@@ -31,9 +31,9 @@ class Shutdowntimer(ListenerPlugin):
 
     def set_shutdown_time(self, shutdown_time=None):
         logger.debug('now: {}'.format(
-            time.strftime("%Y-%m-%d %H:%M:%S", time.time())))
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))))
         logger.debug('shutdown: {}'.format(
-            time.strftime("%Y-%m-%d %H:%M:%S", shutdown_time)))
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(shutdown_time))))
         self.__shutdown_at = shutdown_time
 
     def get_thread(self, new=False):
