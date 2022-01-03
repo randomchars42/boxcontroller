@@ -228,7 +228,6 @@ class BoxController(EventAPI):
         os.system('shutdown -P {}'.format(str(time)))
 
 
-
 def main():
     """Run the application.
 
@@ -297,7 +296,7 @@ def signal_handler(signal_num, frame, boxcontroller):
     """
     logger.info('recieved signal ' + str(signal_num))
     boxcontroller.stop()
-    sys.exit(0)
+    #sys.exit(0)
 
 if __name__ == '__main__':
 
