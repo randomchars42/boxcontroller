@@ -35,9 +35,12 @@ class Shutdowntimer(ListenerPlugin):
         return self.__shutdown_at
 
     def set_shutdown_time(self, shutdown_time=None):
-        if self.get_shutdown_time() is not None:
+        if shutdown_time is None:
+            self.__shutdown_at = None
+        elif self.get_shutdown_time() is not None:
             logger.error('cannot set shutdown time, already set')
             return
+
         logger.debug('now: {}'.format(
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))))
         logger.debug('shutdown: {}'.format(
