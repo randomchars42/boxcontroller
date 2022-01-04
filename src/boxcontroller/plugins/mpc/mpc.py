@@ -24,7 +24,7 @@ class Mpc(ListenerPlugin):
         # exclusive input from these signals it will register with its
         # play-function and unregister our other listeners (toggle, next, ...)
         self.register('mpd_play', self.play, True)
-        self.register('stop', self.on_stop)
+        self.register('terminate', self.on_terminate)
 
         # this plugin may inhibit shutdown etc. if it marks itself as busy
         self.register_as_busy_bee()
@@ -55,7 +55,7 @@ class Mpc(ListenerPlugin):
             # be busy
             self.mark_as_busy(True)
 
-    def on_stop(self):
+    def on_terminate(self):
         """Send stop signal to thread watching MPD and wait for it to finish."""
         self.stop_event.set()
         self.chronicler.join()

@@ -13,8 +13,8 @@ class Shutdowntimer(ListenerPlugin):
 
     def on_init(self):
         self.register('idle', self.on_idle)
-        self.register('busy', self.on_stop)
-        self.register('stop', self.on_stop)
+        self.register('busy', self.stop_countdown)
+        self.register('terminate', self.stop_countdown)
 
         self.__idle_time = self.get_config().get('ShutdownTimer', 'idle_time',
                 default=300, variable_type='int')
@@ -60,13 +60,14 @@ class Shutdowntimer(ListenerPlugin):
         else:
             logger.debug('already idle')
 
-    def on_stop(self):
+    def stop_countdown(self):
         """Send stop signal to thread counting down."""
         logger.debug('stopping countdown for shutdown')
         if self.get_shutdown_time() is not None:
             self.get_stop_event().set()
             self.get_thread().join()
             self.set_shutdown_time()
+            logger.debug('countdown stopped')
         else:
            logger.debug('no countdown set')
 

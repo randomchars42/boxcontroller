@@ -199,7 +199,7 @@ class BoxController(EventAPI):
     def stop(self):
         """Stop all ProcessPlugins and ListenerPlugins."""
         # signal to all Plugins running in the main thread
-        self._dispatch('stop')
+        self._dispatch('terminate')
         # stop all ProcessPlugins with their processes
         self.__stop_signal = True
 
