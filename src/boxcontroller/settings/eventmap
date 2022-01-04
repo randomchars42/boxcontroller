@@ -2,10 +2,11 @@ yourself|smile|at=yourself
 joke|smile|at=joke
 GPIO_27_P|previous
 GPIO_12_P|toggle
+GPIO_12_L|stop
 GPIO_25_P|next
 GPIO_13_P|vol_step|direction=-
 GPIO_24_P|vol_step|direction=+
-stop|stop
 0372441754|vol_max|60
 0203408243|vol_max|40
 shutdown|shutdown
+feedback|feedback

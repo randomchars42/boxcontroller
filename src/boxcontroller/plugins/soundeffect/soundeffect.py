@@ -21,6 +21,7 @@ class Soundeffect(ListenerPlugin):
         self.register('finished_loading', lambda: self.play_sound('ready'))
         self.register('before_shutdown', lambda: self.play_sound('shutdown'))
         self.register('error', lambda: self.play_sound('error'))
+        self.register('feedback', lambda: self.play_sound('feedback'))
         self._path_sounds = Path(self.get_config().get('Soundeffect',
                 'path',
                 default=pkg_resources.resource_filename(__name__, 'sounds')))

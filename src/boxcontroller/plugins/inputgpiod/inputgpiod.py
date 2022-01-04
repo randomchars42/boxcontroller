@@ -52,6 +52,7 @@ class Inputgpiod(ProcessPlugin):
     def on_long_pressed(self, pin):
         logger.debug('GPIO {} pressed for {}'.format(pin,
             self.get_long_press_duration()))
+        self.queue_put('feedback'.format(str(pin)))
         self.queue_put('GPIO_{}_L'.format(str(pin)))
 
     def run(self):
