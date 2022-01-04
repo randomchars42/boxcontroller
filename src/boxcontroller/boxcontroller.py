@@ -196,7 +196,7 @@ class BoxController(EventAPI):
         self.shutdown()
 
 
-    def stop(self):
+    def terminate(self):
         """Stop all ProcessPlugins and ListenerPlugins."""
         # signal to all Plugins running in the main thread
         self._dispatch('terminate')
@@ -207,7 +207,7 @@ class BoxController(EventAPI):
         """Prepare for shutdown."""
         logger.debug('beginning shutdown routine')
         # wait for all processes to stop
-        self.stop()
+        self.terminate()
 
         self._dispatch('before_shutdown')
         self.set_shutdown_flag(True)
@@ -225,7 +225,8 @@ class BoxController(EventAPI):
 
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')
-        os.system('shutdown -P {}'.format(str(time)))
+        print('SHUTDOWN')
+        #os.system('shutdown -P {}'.format(str(time)))
 
 
 def main():
@@ -295,7 +296,7 @@ def signal_handler(signal_num, frame, boxcontroller):
     boxcontroller -- BoxController object to stop
     """
     logger.info('recieved signal ' + str(signal_num))
-    boxcontroller.stop()
+    boxcontroller.terminate()
     #sys.exit(0)
 
 if __name__ == '__main__':
