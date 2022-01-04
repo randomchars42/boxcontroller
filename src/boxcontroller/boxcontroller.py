@@ -210,11 +210,10 @@ class BoxController(EventAPI):
     def on_shutdown(self):
         """Prepare for shutdown."""
         logger.debug('beginning shutdown routine')
+        self.set_shutdown_flag(True)
+        self._dispatch('before_shutdown')
         # wait for all processes to stop
         self.terminate()
-
-        self._dispatch('before_shutdown')
-        self.set_shutdown_flag(True)
 
     def shutdown(self):
         """Actual shutdown procedure called after all processes have stopped."""
