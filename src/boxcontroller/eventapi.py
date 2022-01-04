@@ -61,8 +61,11 @@ class EventAPI:
         event -- the event to unregister from [string]
         who -- name of the plugin to unregister [string]
         """
-        del self.get_subscribers(event)[who]
-        logger.debug('"{}" unregistered for event "{}"'.format(who, event))
+        try:
+            del self.get_subscribers(event)[who]
+            logger.debug('"{}" unregistered for event "{}"'.format(who, event))
+        except KeyError:
+            return
 
     def _dispatch(self, event, *args, **kwargs):
         """Dispatch event.
