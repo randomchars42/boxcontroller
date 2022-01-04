@@ -56,6 +56,7 @@ class Shutdowntimer(ListenerPlugin):
             self.get_stop_event().clear()
             thread = self.get_thread(new=True)
             thread.start()
+            logger.debug('started thread')
         else:
             logger.debug('already idle')
 
