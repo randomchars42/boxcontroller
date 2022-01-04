@@ -179,16 +179,16 @@ class BoxController(EventAPI):
 
         logger.debug('started all process plugins')
         self._dispatch('finished_loading')
+        logger.debug('waiting for signals')
 
         self.am_i_idle()
 
         while not self.get_stop_signal():
-            logger.debug('waiting for signals')
             try:
                 input_string = self.__from_plugins.get(False)
+                self.process_input(input_string)
             except Empty:
                 pass
-            self.process_input(input_string)
 
         # stop all process plugins
         for name, process in self.get_processes().items():
@@ -228,8 +228,7 @@ class BoxController(EventAPI):
 
         time = self.get_config().get('System', 'shutdown_time',
                 default=1, variable_type='int')
-        print('SHUTDOWN')
-        #os.system('shutdown -P {}'.format(str(time)))
+        os.system('shutdown -P {}'.format(str(time)))
 
 
 def main():

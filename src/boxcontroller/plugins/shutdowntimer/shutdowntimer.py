@@ -14,7 +14,7 @@ class Shutdowntimer(ListenerPlugin):
     def on_init(self):
         self.register('idle', self.on_idle)
         self.register('busy', self.stop_countdown)
-        self.register('terminate', self.stop_countdown)
+        self.register('terminate', self.on_terminate)
 
         self.__idle_time = self.get_config().get('ShutdownTimer', 'idle_time',
                 default=300, variable_type='int')
@@ -23,6 +23,11 @@ class Shutdowntimer(ListenerPlugin):
         self.__thread = None
         self.__stop_event = threading.Event()
 
+    def on_terminate(self):
+        self.stop_countdown()
+        self.unregister('idle')
+        self.unregister('busy')
+
     def get_idle_time(self):
         return self.__idle_time
 
@@ -30,6 +35,9 @@ class Shutdowntimer(ListenerPlugin):
         return self.__shutdown_at
 
     def set_shutdown_time(self, shutdown_time=None):
+        if self.get_shutdown_time() is not None:
+            logger.error('cannot set shutdown time, already set')
+            return
         logger.debug('now: {}'.format(
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))))
         logger.debug('shutdown: {}'.format(

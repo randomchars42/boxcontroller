@@ -122,6 +122,8 @@ class EventAPI:
         Keyword arguments:
         busy -- busy (True) or not (False) [boolean]
         """
+        logger.debug('mark {} as {}busy'.format(name,
+            '' if busy else 'not '))
         self.get_busy_bees()[name] = busy
         self.am_i_idle()
 
