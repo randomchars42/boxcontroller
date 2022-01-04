@@ -184,7 +184,10 @@ class BoxController(EventAPI):
 
         while not self.get_stop_signal():
             logger.debug('waiting for signals')
-            input_string = self.__from_plugins.get()
+            try:
+                input_string = self.__from_plugins.get(False)
+            except Empty:
+                pass
             self.process_input(input_string)
 
         # stop all process plugins
