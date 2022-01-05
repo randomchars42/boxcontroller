@@ -94,7 +94,7 @@ class Shutdowntimer(ListenerPlugin):
         """
         shutdown = False
         while not stop_event.wait(5):
-            self.set_shutdown_time(self.get_shutdown_time - 5)
+            self.set_shutdown_time(self.get_shutdown_time() - 5)
             if self.get_shutdown_time() <= 0:
                 logger.debug('shutdown timer expired')
                 shutdown = True
