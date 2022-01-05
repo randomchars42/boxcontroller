@@ -2,6 +2,7 @@
 
 import logging
 import multiprocessing
+import signal
 
 from . import plugin
 
@@ -24,6 +25,19 @@ class ProcessPlugin(plugin.Plugin, multiprocessing.Process):
         kwargs['main'].register_process(self.get_name(), self)
         self.__to_plugins = kwargs['to_plugins']
         self.__from_plugins = kwargs['from_plugins']
+        self.__interrupt_signal = False
+        signal.signal(signal.SIGINT, self.handle_signal)
+        signal.signal(signal.SIGTERM, self.handle_signal)
+
+    def handle_signal(self, signum, frame):
+        logger.debug('{} recieved interrupt signal'.format(self.get_name()))
+        self.set_interrupt_signal()
+
+    def set_interrupt_signal(self, interrupt=True):
+        self.__interrupt_signal = interrupt
+
+    def get_interrupt_signal(self):
+        return self.__interrupt_signal
 
     def queue_get(self):
         """Get messages off the queue."""

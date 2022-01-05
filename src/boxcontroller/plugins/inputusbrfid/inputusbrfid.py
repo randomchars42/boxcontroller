@@ -48,7 +48,7 @@ class Inputusbrfid(ProcessPlugin):
     def read_card(self):
         string = ''
         key = ''
-        while key != 'KEY_ENTER':
+        while key != 'KEY_ENTER' and not self.get_interrupt_signal():
             select([self.get_device()], [], [])
             for event in self.get_device().read():
                 if event.type == 1 and event.value == 1:
