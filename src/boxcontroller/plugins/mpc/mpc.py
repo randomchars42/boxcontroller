@@ -41,6 +41,7 @@ class Mpc(ListenerPlugin):
         self.chronicler.start()
 
         logger.debug('checking if mpd is already playing')
+        self.__last_status_update = 0
         if not self.check_status():
             return
         # we know what's on the list
@@ -312,8 +313,13 @@ class Mpc(ListenerPlugin):
 
     def update_status(self):
         """Update status in statusmap."""
-        logger.debug('updating status')
         self.lock.acquire()
+        logger.debug('updating status')
+
+        if time.time() - self.__last_status_update <= 5:
+            logger.debug('too early')
+            return
+
         if not self.check_status():
             self.lock.release()
             return
