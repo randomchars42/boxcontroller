@@ -41,10 +41,10 @@ class Shutdowntimer(ListenerPlugin):
             logger.error('cannot set shutdown time, already set')
             return
 
-        logger.debug('now: {}'.format(
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))))
-        logger.debug('shutdown: {}'.format(
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(shutdown_time))))
+        #logger.debug('now: {}'.format(
+        #    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))))
+        #logger.debug('shutdown: {}'.format(
+        #    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(shutdown_time))))
         self.__shutdown_at = shutdown_time
 
     def get_thread(self, new=False):
@@ -62,7 +62,7 @@ class Shutdowntimer(ListenerPlugin):
         if self.get_shutdown_time() is None:
             logger.debug('beginning countdown for shutdown in {} seconds'.format(
                 self.get_idle_time()))
-            self.set_shutdown_time(time.time() + self.get_idle_time())
+            self.set_shutdown_time(self.get_idle_time())
 
             self.get_stop_event().clear()
             thread = self.get_thread(new=True)
@@ -85,12 +85,17 @@ class Shutdowntimer(ListenerPlugin):
     def countdown(self, stop_event):
         """Check if it's time to shutdown
 
+        Use a real countdown isntead of checking if we reached shutdown time
+        for after boot the system time might be changed by ntpd and produce
+        weird outcomes.
+
         Positional arguments:
         stop_event -- stops the thread if set [threading.Event]
         """
         shutdown = False
         while not stop_event.wait(5):
-            if int(time.time()) >= self.get_shutdown_time():
+            self.set_shutdown_time(self.get_shutdown_time - 5)
+            if self.get_shutdown_time() <= 0:
                 logger.debug('shutdown timer expired')
                 shutdown = True
                 self.get_stop_event().set()
