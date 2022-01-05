@@ -318,6 +318,7 @@ class Mpc(ListenerPlugin):
 
         if time.time() - self.__last_status_update <= 5:
             logger.debug('too early')
+            self.lock.release()
             return
 
         if not self.check_status():
