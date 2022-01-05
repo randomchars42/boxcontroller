@@ -321,6 +321,7 @@ class Mpc(ListenerPlugin):
             return
 
         if not self.check_status():
+            self.__last_status_update = time.time()
             self.lock.release()
             return
         status = self.query_mpd_status()
@@ -339,8 +340,10 @@ class Mpc(ListenerPlugin):
         if key is None:
             logger.debug('cancel status update, no current key')
             self.lock.release()
+            self.__last_status_update = time.time()
             return
         self.set_status(key, soft=False, **status)
+        self.__last_status_update = time.time()
         self.lock.release()
 
     def watch_status(self, stop_event, interval):
