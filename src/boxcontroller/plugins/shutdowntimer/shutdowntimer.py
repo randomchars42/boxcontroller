@@ -62,7 +62,7 @@ class Shutdowntimer(ListenerPlugin):
         if self.get_shutdown_time() is None:
             logger.debug('beginning countdown for shutdown in {} seconds'.format(
                 self.get_idle_time()))
-            self.set_shutdown_time(int(time.time()) + self.get_idle_time())
+            self.set_shutdown_time(time.time() + self.get_idle_time())
 
             self.get_stop_event().clear()
             thread = self.get_thread(new=True)
